@@ -55,7 +55,10 @@ export default function Home() {
           }
         }
       })
-      .catch((err) => console.error("Failed to fetch home page data:", err));
+      .catch((err) => {
+        console.error("Failed to fetch home page data:", err);
+        setSections([]); // Set to empty array on error so loader stops
+      });
   }, []);
 
   const getSection = (name) => sections?.find((sec) => sec.__component === name);
