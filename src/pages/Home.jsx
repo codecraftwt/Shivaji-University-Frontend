@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
+import { getStrapiMediaUrl } from "../lib/strapi";
 import HeroSection from "../components/home/HeroSection";
 import QuickLinksRow from "../components/home/QuickLinksRow";
 import DepartmentsLeadership from "../components/home/DepartmentsLeadership";
 import AnnouncementsTicker from "../components/home/AnnouncementsTicker";
+import Loader from "../components/Loader";
 
 import Circulars from "../components/home/Circulars";
 import ImportantLinksStats from "../components/home/ImportantLinksStats";
@@ -40,13 +42,27 @@ export default function Home() {
       .then((json) => {
         const fetched = json?.data?.[0]?.sections;
         if (fetched && fetched.length) {
-          setSections(fetched);
+          const heroSection = fetched.find((sec) => sec.__component === "sections.hero-section");
+          const firstSlide = heroSection?.slides?.[0];
+          if (firstSlide && firstSlide.image) {
+            const imgUrl = getStrapiMediaUrl(firstSlide.image);
+            const img = new Image();
+            img.src = imgUrl;
+            img.onload = () => setSections(fetched);
+            img.onerror = () => setSections(fetched);
+          } else {
+            setSections(fetched);
+          }
         }
       })
       .catch((err) => console.error("Failed to fetch home page data:", err));
   }, []);
 
   const getSection = (name) => sections?.find((sec) => sec.__component === name);
+
+  if (sections === null) {
+    return <Loader fullScreen={true} />;
+  }
 
   return (
     <>

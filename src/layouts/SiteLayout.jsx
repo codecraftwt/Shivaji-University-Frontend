@@ -6,7 +6,7 @@ import ScrollToTop from "../components/ScrollToTop.jsx";
 
 export default function SiteLayout() {
   return (
-    <div className="flex min-h-screen flex-col bg-white">
+    <div className="flex flex-1 w-full flex-col bg-white">
       <Header />
       <Navbar />
       <main className="flex-1">

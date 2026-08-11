@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getPage } from "../lib/strapi";
+import Loader from "../components/Loader";
 
 export default function Page() {
   const { slug } = useParams();
@@ -26,7 +27,7 @@ export default function Page() {
   }, [slug]);
 
   if (loading) {
-    return <div className="mx-auto max-w-7xl px-6 py-20 text-gray-500">Loading...</div>;
+    return <Loader fullScreen={true} />;
   }
 
   if (!page) {

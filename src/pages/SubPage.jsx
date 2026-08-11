@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getPage, getMainNavbar } from "../lib/strapi";
+import { getPage, getMainNavbar, getStrapiMediaUrl } from "../lib/strapi";
 import SidebarMenu from "../components/SidebarMenu";
 import HeroBanner from "../components/sections/HeroBanner";
 import ContentWithImage from "../components/sections/ContentWithImage";
 import ImageGrid from "../components/sections/ImageGrid";
+import Loader from "../components/Loader";
 
 export default function SubPage() {
   const { parentSlug, slug } = useParams();
@@ -25,9 +26,6 @@ export default function SubPage() {
         if (!mounted) return;
         setPage(p);
         
-        // Find the matching menu item in the navbar for the sidebar
-        // We match by parentSlug (e.g. if parentSlug is "about_suk", we might look for a menu item with href "/about_suk")
-        // The user specifically wanted the "About Us" menu item data.
         if (navData && navData.menu_items) {
           const parentHref = `/${parentSlug}`;
           const currentMenuItem = navData.menu_items.find(
@@ -38,12 +36,23 @@ export default function SubPage() {
             setMenuData(currentMenuItem);
           }
         }
+
+        if (p?.sections) {
+          const heroBannerSection = p.sections.find((s) => s.__component === "sections.hero-banner");
+          if (heroBannerSection?.image) {
+            const imgUrl = getStrapiMediaUrl(heroBannerSection.image);
+            const img = new Image();
+            img.src = imgUrl;
+            img.onload = () => { if (mounted) setLoading(false); };
+            img.onerror = () => { if (mounted) setLoading(false); };
+            return; // Wait for image to load before setting loading false
+          }
+        }
+        if (mounted) setLoading(false);
       })
       .catch((err) => {
         console.error("Failed to load subpage data", err);
         if (mounted) setPage(null);
-      })
-      .finally(() => {
         if (mounted) setLoading(false);
       });
 
@@ -53,7 +62,7 @@ export default function SubPage() {
   }, [slug, parentSlug]);
 
   if (loading) {
-    return <div className="mx-auto max-w-7xl px-6 py-20 text-gray-500">Loading...</div>;
+    return <Loader fullScreen={true} />;
   }
 
   if (!page) {
