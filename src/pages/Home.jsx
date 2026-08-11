@@ -53,6 +53,9 @@ export default function Home() {
           } else {
             setSections(fetched);
           }
+        } else {
+          // If no data was returned from Strapi (empty database)
+          setSections([]);
         }
       })
       .catch((err) => {

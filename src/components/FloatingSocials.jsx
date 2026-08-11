@@ -29,7 +29,7 @@ export default function FloatingSocials({ socialLinks = [] }) {
   if (!socialLinks || socialLinks.length === 0) return null;
 
   return (
-    <div className="fixed right-6 top-1/2 -translate-y-1/2 z-[9999] hidden xl:flex flex-col gap-4">
+    <div className="fixed right-6 top-1/2 -translate-y-1/2 z-[50] hidden xl:flex flex-col gap-4">
       {socialLinks.map((s, i) => {
         const Icon = socialIcons[s.platform.toLowerCase()];
         if (!Icon) return null;
