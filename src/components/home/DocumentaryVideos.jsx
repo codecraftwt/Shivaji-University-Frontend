@@ -1,11 +1,11 @@
 import { useState } from "react";
 
 const defaultVideos = [
-  { title: "Shivaji University Documentary", link: "" },
-  { title: "Hon'ble Chancellor message on the occasion of 60th Foundation Day of Shivaji University", link: "" },
-  { title: "Hon'ble Vice Chancellor - Address to Students on International Youth Day at Campus Ground", link: "" },
-  { title: "A Message From Vice Chancellor, Kolhapur", link: "" },
-  { title: "Shivaji University Community Radio: 90.4 FM (Tomato FM)", link: "" },
+  { title: "Shivaji University Documentary", link: "https://youtu.be/tBnWF9iTYEA?si=ulKjIyluRWErL7XL" },
+  { title: "Hon'ble Chancellor message on the occasion of 60th Foundation Day of Shivaji University", link: "https://youtu.be/tBnWF9iTYEA?si=ulKjIyluRWErL7XL" },
+  { title: "Hon'ble Vice Chancellor - Address to Students on International Youth Day at Campus Ground", link: "https://youtu.be/tBnWF9iTYEA?si=ulKjIyluRWErL7XL" },
+  { title: "A Message From Vice Chancellor, Kolhapur", link: "https://youtu.be/tBnWF9iTYEA?si=ulKjIyluRWErL7XL" },
+  { title: "Shivaji University Community Radio: 90.4 FM (Tomato FM)", link: "https://youtu.be/tBnWF9iTYEA?si=ulKjIyluRWErL7XL" },
 ];
 
 const FALLBACK_THUMB = "https://placehold.co/800x450/333/666?text=Shivaji+University";
@@ -38,9 +38,9 @@ export default function DocumentaryVideos({ data }) {
   };
 
   return (
-    <section className="py-16 bg-gray-50">
+    <section className="py-16 bg-white">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 bg-white p-8 rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-gray-100">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 bg-white p-4 sm:p-8 rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-gray-100">
           {/* Video Player */}
           <div
             className="relative rounded-xl overflow-hidden bg-gray-800 aspect-video flex items-center justify-center group cursor-pointer border-4 border-white shadow-lg"
@@ -81,8 +81,10 @@ export default function DocumentaryVideos({ data }) {
                   className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-105 transition duration-500"
                 />
                 <div className="absolute inset-0 bg-black/20"></div>
-                <div className="w-16 h-16 bg-white/80 rounded-full flex items-center justify-center backdrop-blur-sm shadow-xl z-10 hover:bg-[#FF7B12] hover:text-white transition-all duration-300">
-                  <svg className="w-8 h-8 text-[#0B4C87] ml-1 group-hover:text-white transition-colors duration-300" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd"/></svg>
+                <div className="w-14 h-14 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-md border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.3)] z-10 group-hover:bg-white/20 group-hover:scale-110 group-hover:border-white/50 transition-all duration-500 ease-out">
+                  <svg className="w-8 h-8 text-white opacity-90 drop-shadow-md" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
                 </div>
                 <span className="absolute bottom-3 left-4 right-4 z-10 text-white text-sm font-semibold text-left line-clamp-2 drop-shadow">
                   {active?.title}

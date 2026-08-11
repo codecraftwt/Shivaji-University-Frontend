@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useLocation } from "react-router-dom";
 
-const STRAPI_URL = import.meta.env.VITE_STRAPI_URL || "http://localhost:1338";
+const STRAPI_URL = import.meta.env.VITE_STRAPI_URL || "http://localhost:1337";
 
 export default function Navbar({ initialMenu }) {
   const { pathname } = useLocation();
@@ -138,7 +138,7 @@ export default function Navbar({ initialMenu }) {
                   >
                     <Link
                       to={hasDropdownItems ? "#" : (item.href || "#")}
-                      className="flex items-center gap-1 px-1.5 py-1 text-[13.5px] font-medium uppercase tracking-wide text-white hover:text-[#FF7B12] transition-colors whitespace-nowrap relative"
+                      className="flex items-center gap-1 px-1.5 py-1 text-[13 px] font-medium uppercase tracking-wide text-white hover:text-[#FF7B12] transition-colors whitespace-nowrap relative"
                       onClick={(e) => {
                         if (hasDropdownItems) e.preventDefault();
                       }}

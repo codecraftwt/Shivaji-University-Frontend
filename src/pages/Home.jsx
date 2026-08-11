@@ -17,7 +17,7 @@ export default function Home() {
     // so the `on` syntax must list every component used in the dynamic zone explicitly.
     const query = [
       "filters[slug][$eq]=home",
-      "populate[sections][on][sections.hero-section][populate][backgroundImage]=true",
+      "populate[sections][on][sections.hero-section][populate][slides][populate][image]=true",
       "populate[sections][on][sections.quick-links][populate][links]=true",
       "populate[sections][on][sections.departments-leadership][populate][leadership][populate][image]=true",
       "populate[sections][on][sections.departments-leadership][populate][departments]=true",

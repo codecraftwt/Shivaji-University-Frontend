@@ -127,9 +127,10 @@ export default function DepartmentsLeadership({ data }) {
   return (
     <section
       ref={sectionRef}
-      className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-14 sm:py-20"
+      className="py-14 sm:py-20 bg-white"
     >
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 lg:gap-10">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 lg:gap-10">
         {/* ===== Departments ===== */}
         <div>
           <div className="mb-6 flex items-end justify-between gap-4">
@@ -245,7 +246,7 @@ export default function DepartmentsLeadership({ data }) {
                   transitionDelay:
                     revealed && !reduceMotion ? `${150 + i * 120}ms` : "0ms",
                 }}
-                className={`group relative flex-shrink-0 w-[calc(50%-10px)] snap-start snap-always overflow-hidden rounded-2xl border border-gray-100 bg-white p-8 text-center shadow-sm transition-all duration-500 ease-out hover:-translate-y-1 hover:shadow-lg hover:shadow-[#005bb5]/10 ${
+                className={`group relative flex-shrink-0 w-full sm:w-[calc(50%-10px)] snap-start snap-always overflow-hidden rounded-2xl border border-gray-100 bg-white p-8 text-center shadow-sm transition-all duration-500 ease-out hover:-translate-y-1 hover:shadow-lg hover:shadow-[#005bb5]/10 ${
                   revealed
                     ? "translate-y-0 opacity-100"
                     : "translate-y-4 opacity-0"
@@ -272,6 +273,7 @@ export default function DepartmentsLeadership({ data }) {
             ))}
           </div>
         </div>
+      </div>
       </div>
     </section>
   );

@@ -2,16 +2,8 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bell, CalendarDays, Trophy, ArrowRight, ArrowUpRight } from "lucide-react";
 import { getStrapiMediaUrl } from "../../lib/strapi";
+import Button from "../Button";
 import "./PremiumNoticeBoard.css";
-
-/**
- * PremiumNoticeBoard
- * A three-column "Updates / Upcoming Events / Achievements" panel.
- * - Each column auto-scrolls vertically like a slow news reel, pausing on hover.
- * - One column scrolls up, the next scrolls down, alternating for a dynamic feel.
- * - Hovering a column cross-fades its photo (one image per column) behind it.
- * - Brand: navy (#0B4C87) + signal orange (#FF7B12) on a light surface.
- */
 
 const formatDate = (date) => {
   if (!date) return null;
@@ -31,7 +23,7 @@ function Column({ column, idx }) {
     <div
       className="group relative flex-1 min-w-[260px] overflow-hidden rounded-2xl border border-black/[0.06] shadow-[0_20px_50px_-20px_rgba(15,23,42,0.25)]"
       style={{
-        background: "linear-gradient(165deg, #ffffff 0%, #f6f7fb 100%)",
+        background: "#ffffff",
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -130,12 +122,80 @@ function Column({ column, idx }) {
 
         {/* footer */}
         <div className="px-6 pb-6 pt-4">
-          <button className="group/btn flex w-full items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-[#FF7B12] to-[#e8660a] px-5 py-2.5 text-[12.5px] font-bold uppercase tracking-wide text-white shadow-[0_8px_20px_-6px_rgba(255,123,18,0.55)] transition-transform duration-200 hover:scale-[1.02] hover:shadow-[0_10px_26px_-6px_rgba(255,123,18,0.7)]">
+          <Button className="w-full text-xs font-bold uppercase tracking-wide group/btn">
             View More
             <ArrowRight size={14} className="transition-transform duration-200 group-hover/btn:translate-x-0.5" />
-          </button>
+          </Button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function MarqueeBanner({ data }) {
+  const announcements = data?.updates?.length ? data.updates : [];
+  if (announcements.length === 0) return null;
+
+  const bgImage = getStrapiMediaUrl(data?.updatesImage) || getStrapiMediaUrl(data?.eventsImage) || "";
+
+  return (
+    <div className="relative w-full bg-[#1a1a2e] overflow-hidden min-h-[280px] sm:min-h-[350px] flex items-center border-y border-white/10">
+      {/* Background Image with Overlay */}
+      {bgImage && (
+        <div 
+          className="absolute inset-0 z-0 bg-cover bg-center mix-blend-luminosity opacity-[0.55]"
+          style={{ backgroundImage: `url(${bgImage})` }}
+        />
+      )}
+      
+      {/* Deep Dark Overlay for readability */}
+      <div className="absolute inset-0 z-0 bg-gradient-to-r from-[#0B2540]/70 via-[#1a1a2e]/50 to-[#0B2540]/70" />
+
+      {/* Content Wrapper */}
+      <div className="relative z-10 w-full py-12 sm:py-16 flex flex-col items-center justify-center">
+        <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-wide mb-5 sm:mb-6 drop-shadow-lg">
+          Announcements
+        </h2>
+        
+        {/* Ticker Container with Edge Fading */}
+        <div 
+          className="w-full overflow-hidden flex"
+          style={{
+            maskImage: "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)",
+            WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)"
+          }}
+        >
+          <div className="flex whitespace-nowrap animate-marquee">
+            {/* Render items 3 times for a flawless infinite scroll (translating by 33.33%) */}
+            {[...announcements, ...announcements, ...announcements].map((item, idx) => (
+              <a 
+                key={idx} 
+                href={item.link || "#"}
+                className="inline-flex items-center px-6 sm:px-10 text-[15px] font-medium text-white/90 hover:text-white transition-colors group cursor-pointer"
+              >
+                <span className="w-2 h-2 rounded-full bg-[#FF7B12] mr-4 shadow-[0_0_10px_rgba(255,123,18,0.8)]"></span>
+                <span className="group-hover:underline decoration-[#FF7B12] underline-offset-4 decoration-2 tracking-wide">
+                  {item.title || item.text}
+                </span>
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes marquee-scroll {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-33.333333%); }
+        }
+        .animate-marquee {
+          animation: marquee-scroll 40s linear infinite;
+          width: max-content;
+        }
+        .animate-marquee:hover {
+          animation-play-state: paused;
+        }
+      `}} />
     </div>
   );
 }
@@ -171,15 +231,20 @@ export default function PremiumNoticeBoard({ data }) {
   ];
 
   return (
-    <section
-      className="relative w-full px-4 py-10"
-      style={{ background: "radial-gradient(120% 100% at 50% 0%, #eef2f8 0%, #dfe6f0 70%)" }}
-    >
-      <div className="mx-auto flex max-w-6xl flex-col gap-6 sm:flex-row">
-        {columns.map((col, idx) => (
-          <Column key={col.key} column={col} idx={idx} />
-        ))}
-      </div>
-    </section>
+    <div className="w-full flex flex-col">
+      {/* New Marquee Banner on Top */}
+      <MarqueeBanner data={data} />
+      
+      {/* Original Premium Cards Section */}
+      <section
+        className="relative w-full px-4 py-10 bg-white"
+      >
+        <div className="mx-auto flex max-w-6xl flex-col gap-6 sm:flex-row">
+          {columns.map((col, idx) => (
+            <Column key={col.key} column={col} idx={idx} />
+          ))}
+        </div>
+      </section>
+    </div>
   );
 }

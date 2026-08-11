@@ -1,5 +1,7 @@
-import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { getStrapiMediaUrl } from "../../lib/strapi";
+import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 import Button from "../Button";
 
 const textVariants = {
@@ -12,56 +14,128 @@ const textVariants = {
 };
 
 export default function HeroSection({ data }) {
-  const subheading = data?.subheading || "Shaping Bright Minds Through Quality Education";
-  const heading = data?.heading || "Shivaji University: \nEmpowering Future Generations";
-  const buttonText = data?.buttonText || "Admissions Open";
-  const buttonLink = data?.buttonLink || "/admissions";
-  const mediaUrl = data?.backgroundImage ? getStrapiMediaUrl(data.backgroundImage) : "https://placehold.co/1920x800/333/666?text=University+Campus";
+  const slides = data?.slides || [];
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    if (slides.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % slides.length);
+    }, 6000); // Change slide every 6 seconds
+    return () => clearInterval(interval);
+  }, [slides.length]);
+
+  const nextSlide = () => {
+    setCurrentIndex((prev) => (prev + 1) % slides.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentIndex((prev) => (prev - 1 + slides.length) % slides.length);
+  };
+
+  if (slides.length === 0) {
+    return null; // Don't render anything if no slides are provided
+  }
+
+  const currentSlide = slides[currentIndex];
+  const buttonText = currentSlide?.buttonText || "Admissions Open";
+  const buttonLink = currentSlide?.buttonLink || "/admissions";
+  const mediaUrl = currentSlide?.image ? getStrapiMediaUrl(currentSlide.image) : "https://placehold.co/1920x800/333/666?text=University+Campus";
 
   return (
     <>
-      <section id="hero-section" className="relative z-0 w-full h-[600px] bg-[#0F172A] overflow-hidden">
-        {/* Infinite Slow Zoom Background Image */}
-        <motion.div
-          animate={{ scale: [1, 1.08, 1] }}
-          transition={{ duration: 40, ease: "linear", repeat: Infinity }}
-          className="absolute inset-0 w-full h-full"
-        >
-          <img
-            src={mediaUrl}
-            alt="Hero Background"
-            className="w-full h-full object-cover opacity-60"
-          />
-        </motion.div>
-
-        {/* Gradient Overlays */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10 z-0"></div>
-
-        {/* Main Content Area */}
-        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-full flex flex-col justify-center pb-24">
+      <section id="hero-section" className="relative z-0 w-full h-[650px] bg-[#0F172A] overflow-hidden group/hero font-sans">
+        <AnimatePresence>
           <motion.div
-            initial="hidden"
-            animate="visible"
-            transition={{ staggerChildren: 0.2 }}
-            className="max-w-4xl"
+            key={currentIndex}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1.5, ease: "easeInOut" }}
+            className="absolute inset-0 w-full h-full"
           >
-            <motion.p variants={textVariants} className="text-[#FF7B12] text-sm md:text-base font-bold uppercase tracking-[3px] mb-3 drop-shadow-md">
-              {subheading}
-            </motion.p>
-            <motion.h1 variants={textVariants} className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-white leading-[1.1] mb-6 tracking-tight drop-shadow-lg whitespace-pre-line">
-              {heading}
-            </motion.h1>
-            <motion.div variants={textVariants} className="pt-2">
-              <Button to={buttonLink} className="px-8 py-3.5 text-lg inline-flex items-center justify-center gap-2">
-                {buttonText}
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
-              </Button>
+            {/* Infinite Slow Zoom Background Image */}
+            <motion.div
+              animate={{ scale: [1, 1.1] }}
+              transition={{ duration: 20, ease: "linear", repeat: Infinity, repeatType: "reverse" }}
+              className="w-full h-full"
+            >
+              <img
+                src={mediaUrl}
+                alt={currentSlide?.heading || "Hero Background"}
+                className="w-full h-full object-cover opacity-60"
+              />
             </motion.div>
           </motion.div>
+        </AnimatePresence>
+
+        {/* Gradient Overlays */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10 z-0 pointer-events-none"></div>
+
+        {/* Main Content Area */}
+        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-full flex flex-col justify-center pt-16 sm:pt-24 pb-8">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentIndex}
+              initial="hidden"
+              animate="visible"
+              exit={{ opacity: 0, y: -20, transition: { duration: 0.3 } }}
+              transition={{ staggerChildren: 0.2 }}
+              className="max-w-4xl"
+            >
+              <motion.p variants={textVariants} className="text-[#FF7B12] text-sm md:text-base lg:text-lg font-bold uppercase tracking-[3px] mb-4 drop-shadow-md">
+                {currentSlide?.subheading}
+              </motion.p>
+              <motion.h1 
+                variants={textVariants} 
+                className="text-base sm:text-5xl  font-bold text-white leading-[1.2] mb-8 tracking-tight drop-shadow-lg whitespace-pre-line"
+              >
+                {currentSlide?.heading}
+              </motion.h1>
+              <motion.div variants={textVariants} className="pt-2">
+                <Button to={buttonLink} className="px-6 py-2.5 text-base inline-flex items-center justify-center gap-2">
+                  {buttonText}
+                  <ArrowRight size={18} />
+                </Button>
+              </motion.div>
+            </motion.div>
+          </AnimatePresence>
         </div>
 
+        {/* Navigation Arrows */}
+        {slides.length > 1 && (
+          <>
+            <button
+              onClick={prevSlide}
+              className="absolute left-4 sm:left-8 top-1/2 -translate-y-1/2 z-20 w-12 h-12 flex items-center justify-center rounded-full bg-black/20 text-white hover:bg-[#FF7B12] transition-colors duration-300 opacity-0 group-hover/hero:opacity-100 backdrop-blur-sm"
+              aria-label="Previous Slide"
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+            <button
+              onClick={nextSlide}
+              className="absolute right-4 sm:right-8 top-1/2 -translate-y-1/2 z-20 w-12 h-12 flex items-center justify-center rounded-full bg-black/20 text-white hover:bg-[#FF7B12] transition-colors duration-300 opacity-0 group-hover/hero:opacity-100 backdrop-blur-sm"
+              aria-label="Next Slide"
+            >
+              <ChevronRight className="w-6 h-6" />
+            </button>
+          </>
+        )}
+
+        {/* Carousel Controls */}
+        {slides.length > 1 && (
+          <div className="absolute bottom-24 sm:bottom-32 left-1/2 -translate-x-1/2 flex gap-3 z-20">
+            {slides.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => setCurrentIndex(idx)}
+                className={`w-3 h-3 rounded-full transition-all duration-300 ${idx === currentIndex ? 'bg-[#FF7B12] w-8' : 'bg-white/50 hover:bg-white'}`}
+                aria-label={`Go to slide ${idx + 1}`}
+              />
+            ))}
+          </div>
+        )}
       </section>
     </>
   );

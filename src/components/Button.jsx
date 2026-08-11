@@ -1,15 +1,65 @@
 import { Link } from "react-router-dom";
 
-const styles =
-  "relative cursor-pointer overflow-hidden border-2 border-[#c1a362] bg-transparent rounded-[34px] px-6 py-2 text-[15px] font-semibold text-[#c1a362] transition-all duration-300 ease-[cubic-bezier(0.23,1,0.320,1)] before:absolute before:inset-0 before:m-auto before:w-[50px] before:h-[50px] before:rounded-full before:scale-0 before:-z-10 before:bg-[#c1a362] before:transition-all before:duration-500 before:ease-[cubic-bezier(0.23,1,0.320,1)] hover:scale-110 hover:text-[#212121] hover:shadow-[0_0px_20px_rgba(193,163,98,0.4)] hover:before:scale-[3] active:scale-100";
+const baseClasses = "relative inline-flex items-center justify-center px-8 py-2.5 overflow-hidden tracking-tighter text-white bg-[#1E90FF] rounded-md group";
 
 export default function Button({ children, className = "", to, href, ...props }) {
-  const cls = `${styles} ${className}`;
+  const cls = `${baseClasses} ${className}`;
+
+  const innerContent = (
+    <>
+      {/* Expanding Orange Hover Background */}
+      <span
+        className="absolute w-0 h-0 transition-all duration-500 ease-out bg-[#FF7B12] rounded-full group-hover:w-[400px] group-hover:h-[400px]"
+      ></span>
+      
+      {/* Decorative SVG Left */}
+      <span className="absolute bottom-0 left-0 h-full -ml-2 pointer-events-none">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="w-auto h-full opacity-100 object-stretch"
+          viewBox="0 0 487 487"
+        >
+          <path
+            fillOpacity=".1"
+            fillRule="nonzero"
+            fill="#FFF"
+            d="M0 .3c67 2.1 134.1 4.3 186.3 37 52.2 32.7 89.6 95.8 112.8 150.6 23.2 54.8 32.3 101.4 61.2 149.9 28.9 48.4 77.7 98.8 126.4 149.2H0V.3z"
+          ></path>
+        </svg>
+      </span>
+      
+      {/* Decorative SVG Right */}
+      <span className="absolute top-0 right-0 w-12 h-full -mr-3 pointer-events-none">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="object-cover w-full h-full"
+          viewBox="0 0 487 487"
+        >
+          <path
+            fillOpacity=".1"
+            fillRule="nonzero"
+            fill="#FFF"
+            d="M487 486.7c-66.1-3.6-132.3-7.3-186.3-37s-95.9-85.3-126.2-137.2c-30.4-51.8-49.3-99.9-76.5-151.4C70.9 109.6 35.6 54.8.3 0H487v486.7z"
+          ></path>
+        </svg>
+      </span>
+      
+      {/* Gradient Overlay */}
+      <span
+        className="absolute inset-0 w-full h-full -mt-1 rounded-lg opacity-30 bg-gradient-to-b from-transparent via-transparent to-gray-200 pointer-events-none"
+      ></span>
+      
+      {/* Text/Children Container */}
+      <span className="relative z-10 flex items-center justify-center gap-2 font-semibold">
+        {children}
+      </span>
+    </>
+  );
 
   if (to) {
     return (
       <Link to={to} className={cls} {...props}>
-        {children}
+        {innerContent}
       </Link>
     );
   }
@@ -17,14 +67,14 @@ export default function Button({ children, className = "", to, href, ...props })
   if (href) {
     return (
       <a href={href} className={cls} {...props}>
-        {children}
+        {innerContent}
       </a>
     );
   }
 
   return (
     <button {...props} className={cls}>
-      {children}
+      {innerContent}
     </button>
   );
 }

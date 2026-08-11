@@ -1,5 +1,6 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getStrapiMediaUrl } from "../../lib/strapi";
+import { useInView, animate } from "framer-motion";
 
 const defaultLinks = [
   { name: "NAAC", url: "#", imageUrl: "https://inherent-duck.jurassic.ninja/wp-content/uploads/2024/10/naac.jpg" },
@@ -18,6 +19,38 @@ const defaultStats = [
   { value: "297", label: "Affiliated Colleges" },
   { value: "853", label: "Campus in Acres" },
 ];
+
+function StatCounter({ value }) {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-50px" });
+  const [displayValue, setDisplayValue] = useState(0);
+
+  const numMatch = String(value).match(/(\d+)/);
+  const numValue = numMatch ? parseInt(numMatch[0], 10) : 0;
+  const suffix = numMatch ? String(value).substring(numMatch[0].length + numMatch.index) : String(value);
+  const prefix = numMatch ? String(value).substring(0, numMatch.index) : "";
+
+  useEffect(() => {
+    if (isInView && numValue > 0) {
+      const controls = animate(0, numValue, {
+        duration: 2.5,
+        ease: "easeOut",
+        onUpdate: (v) => setDisplayValue(Math.round(v)),
+      });
+      return () => controls.stop();
+    }
+  }, [isInView, numValue]);
+
+  if (numValue === 0 && !numMatch) {
+    return <span ref={ref}>{value}</span>;
+  }
+
+  return (
+    <span ref={ref}>
+      {prefix}{displayValue}{suffix}
+    </span>
+  );
+}
 
 export default function ImportantLinksStats({ data }) {
   const links = data?.importantLinks?.length
@@ -72,7 +105,7 @@ export default function ImportantLinksStats({ data }) {
   }, [links]);
 
   return (
-    <section className="py-12 bg-gray-50">
+    <section className="py-12 bg-white">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <h2 className="text-3xl font-bold text-[#007bff] mb-10">Other Important Links</h2>
         <div
@@ -117,18 +150,12 @@ export default function ImportantLinksStats({ data }) {
           {stats.map((stat, i) => (
             <div
               key={i}
-              className="group relative bg-white border border-gray-100 rounded-2xl p-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.04)] hover:shadow-[0_15px_30px_-5px_rgba(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col justify-center min-h-[140px]"
+              className="group relative rounded-2xl bg-white transition-all duration-500 hover:-translate-y-2 shadow-[0_12px_40px_-6px_rgba(0,0,0,0.15)] hover:shadow-[0_15px_30px_-10px_rgba(30,144,255,0.3)] overflow-hidden flex flex-col justify-center min-h-[140px] border border-gray-100 p-6 items-center text-center hover:border-[#1E90FF]/40"
             >
-              {/* Premium Top Line Accent with gradient - slides down on hover */}
-              <div className="absolute top-0 left-0 w-full h-[4px] bg-gradient-to-r from-[#1E90FF] to-[#FF7B12] transform -translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-
-              {/* Unique corner gradient dot decoration */}
-              <div className="absolute bottom-2 right-2 w-1.5 h-1.5 rounded-full bg-gray-200 group-hover:bg-[#FF7B12] transition-colors duration-300"></div>
-              
-              <div className="text-3xl font-extrabold text-[#007bff] mb-2 group-hover:scale-110 transition-transform duration-300">
-                {stat.value}
+              <div className="text-3xl font-black text-[#1E90FF] mb-2 group-hover:text-[#FF7B12] transition-colors duration-500 drop-shadow-sm group-hover:scale-110">
+                <StatCounter value={stat.value} />
               </div>
-              <div className="text-[11px] font-bold text-gray-500 tracking-wider uppercase leading-snug group-hover:text-gray-700 transition-colors duration-300">
+              <div className="text-xs font-bold text-gray-500 tracking-widest uppercase leading-snug group-hover:text-gray-900 transition-colors duration-500">
                 {stat.label}
               </div>
             </div>

@@ -9,7 +9,10 @@ export async function fetchApi(path) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000);
   try {
-    const res = await fetch(url, { signal: controller.signal });
+    const res = await fetch(url, { 
+      signal: controller.signal,
+      cache: 'no-store'
+    });
     clearTimeout(timeoutId);
     if (!res.ok) throw new Error(`Strapi ${res.status}`);
     return res.json();
@@ -25,7 +28,7 @@ export async function getHeader() {
 }
 
 export async function getFooter() {
-  const data = await fetchApi("/footer?populate[columns][populate][links]=true&populate[socialLinks]=true");
+  const data = await fetchApi("/footer?populate[columns][populate][links]=true&populate[socialLinks]=true&populate[quickLinks]=true&populate[logoImage]=true");
   return data.data;
 }
 
@@ -43,9 +46,12 @@ export async function getMainNavbar() {
   return data.data;
 }
 
-export async function getPage(slug) {
+export async function getPage(slug, parentSlug) {
   const onQueries = [
-    "populate[sections][on][sections.hero-slider][populate][slides][populate][image]=true",
+    "populate[sections][on][sections.hero-banner][populate][image]=true",
+    "populate[sections][on][sections.content-with-image][populate][image]=true",
+    "populate[sections][on][sections.image-grid][populate][items][populate][image]=true",
+    "populate[sections][on][sections.hero-section][populate][slides][populate][image]=true",
     "populate[sections][on][sections.about-content][populate][image]=true",
     "populate[sections][on][sections.about-rit][populate][image]=true",
     "populate[sections][on][sections.stats-counter][populate][stats]=true",
@@ -71,11 +77,20 @@ export async function getPage(slug) {
     `/pages?${onQueries}`
   );
   const pages = data.data || [];
-  const bySlug = pages.find((p) =>
-    p.slug === slug ||
-    p.slug === `/${slug}` ||
-    (slug === "home" && (p.slug === "/" || p.slug === ""))
-  );
+  
+  const normalize = (str) => str ? str.toLowerCase().replace(/_/g, '-') : '';
+
+  const bySlug = pages.find((p) => {
+    const pSlug = normalize(p.slug);
+    const nSlug = normalize(slug);
+    const nParentSlug = normalize(parentSlug);
+
+    if (pSlug === nSlug || pSlug === `/${nSlug}`) return true;
+    if (nParentSlug && (pSlug === `/${nParentSlug}/${nSlug}` || pSlug === `${nParentSlug}/${nSlug}`)) return true;
+    if (nSlug === "home" && (pSlug === "/" || pSlug === "")) return true;
+    return false;
+  });
+
   if (bySlug && bySlug.sections && bySlug.sections.length > 0) return bySlug;
   const withSections = pages.find((p) => p.sections && p.sections.length > 0);
   if (withSections) return withSections;
@@ -84,13 +99,36 @@ export async function getPage(slug) {
 
 export function getStrapiMediaUrl(media) {
   if (!media) return null;
-  if (typeof media === 'string') {
-    if (media.startsWith("http")) return media;
-    return getStrapiUrl(media);
+  
+  // Handle array of media
+  if (Array.isArray(media)) {
+    if (media.length === 0) return null;
+    media = media[0];
   }
-  const url = media.url || media?.formats?.thumbnail?.url;
+
+  // Handle nested 'data' or 'attributes' (Strapi v4 structures)
+  let obj = media;
+  if (obj.data) {
+    if (Array.isArray(obj.data)) {
+      if (obj.data.length === 0) return null;
+      obj = obj.data[0];
+    } else {
+      obj = obj.data;
+    }
+  }
+  if (obj.attributes) {
+    obj = obj.attributes;
+  }
+
+  if (typeof obj === 'string') {
+    if (obj.startsWith("http")) return obj;
+    return getStrapiUrl(obj);
+  }
+
+  const url = obj.url || obj?.formats?.large?.url || obj?.formats?.medium?.url || obj?.formats?.thumbnail?.url;
+  
   if (!url) return null;
-  if (url.startsWith("http")) return url;
+  if (url.startsWith("http") || url.startsWith("data:")) return url;
   return getStrapiUrl(url);
 }
 

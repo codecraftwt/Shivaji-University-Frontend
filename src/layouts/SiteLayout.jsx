@@ -2,6 +2,7 @@ import { Outlet } from "react-router-dom";
 import Header from "../components/Header.jsx";
 import Navbar from "../components/Navbar.jsx";
 import Footer from "../components/Footer.jsx";
+import ScrollToTop from "../components/ScrollToTop.jsx";
 
 export default function SiteLayout() {
   return (
@@ -12,6 +13,7 @@ export default function SiteLayout() {
         <Outlet />
       </main>
       <Footer />
+      <ScrollToTop />
     </div>
   );
 }
