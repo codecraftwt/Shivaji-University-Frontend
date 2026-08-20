@@ -3,8 +3,8 @@ import TopUtilityBar from "./TopUtilityBar";
 
 export default function HeaderClient({ logoUrl, rightLogoUrl, header }) {
   // default logo from reference
-  const defaultLogoUrl = "https://inherent-duck.jurassic.ninja/wp-content/uploads/2024/10/uni_logo-1-2.webp";
-  const defaultRightLogoUrl = "https://inherent-duck.jurassic.ninja/wp-content/uploads/2024/10/iso-g20-1.png";
+  const defaultLogoUrl = "https://res.cloudinary.com/dwwykeft2/image/upload/v1786098502/Unishivaji_website/uni_logo_e3ed2df4ec.png";
+  const defaultRightLogoUrl = "https://res.cloudinary.com/dwwykeft2/image/upload/v1786098492/Unishivaji_website/iso_naac_2d577e1b1f.png";
 
   const finalLogoUrl = logoUrl || header?.logoUrl || defaultLogoUrl;
   const finalRightLogoUrl = rightLogoUrl || header?.rightLogoUrl || defaultRightLogoUrl;

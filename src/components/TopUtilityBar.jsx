@@ -51,7 +51,8 @@ export default function TopUtilityBar() {
   const [barData, setBarData] = useState(defaultData);
 
   useEffect(() => {
-    fetch("http://localhost:1337/api/top-utility-bar?populate=*")
+    const strapiUrl = import.meta.env.VITE_STRAPI_URL || "http://localhost:1337";
+    fetch(`${strapiUrl}/api/top-utility-bar?populate=*`)
       .then(res => res.json())
       .then(json => {
         const d = json?.data;
