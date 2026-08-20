@@ -67,7 +67,7 @@ export async function getPage(slug, parentSlug) {
     "populate[sections][on][sections.updates-events-achievements][populate][achievementsImage]=true",
     "populate[sections][on][sections.quick-links][populate][links]=true",
     "populate[sections][on][sections.circulars][populate][circulars]=true",
-    "populate[sections][on][sections.important-links-stats][populate][importantLinks]=true",
+    "populate[sections][on][sections.important-links-stats][populate][importantLinks][populate][image]=true",
     "populate[sections][on][sections.important-links-stats][populate][stats]=true",
     "populate[sections][on][sections.documentary-videos][populate][videos]=true",
     "populate[sections][on][sections.partner-logos][populate][partners][populate][image]=true",
