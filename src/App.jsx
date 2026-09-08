@@ -11,6 +11,7 @@ export default function App() {
         <Route index element={<Home />} />
         <Route path="/pages/:slug" element={<Page />} />
         <Route path="/:parentSlug/:slug" element={<SubPage />} />
+        <Route path="/:slug" element={<SubPage />} />
       </Route>
     </Routes>
   );

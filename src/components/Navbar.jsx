@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { resolveHref } from "../lib/strapi";
 
 const STRAPI_URL = import.meta.env.VITE_STRAPI_URL || "http://localhost:1337";
 
@@ -128,6 +129,7 @@ export default function Navbar({ initialMenu }) {
               {sortedMenu.map((item) => {
                 const hasDropdownItems = item.dropdown_items && item.dropdown_items.length > 0;
                 const posOffset = dropdownPos[item.id];
+                const resolvedItemHref = resolveHref(item);
 
                 return (
                   <div
@@ -137,8 +139,8 @@ export default function Navbar({ initialMenu }) {
                     onMouseEnter={() => computeDropdownPos(item.id)}
                   >
                     <Link
-                      to={hasDropdownItems ? "#" : (item.href || "#")}
-                      className="flex items-center gap-1 px-1.5 py-1 text-[13 px] font-medium uppercase tracking-wide text-white hover:text-[#FF7B12] transition-colors whitespace-nowrap relative"
+                      to={hasDropdownItems ? "#" : resolvedItemHref}
+                      className="flex items-center gap-1 px-1.5 py-1 text-[13px] font-medium uppercase tracking-wide text-white hover:text-[#FF7B12] transition-colors whitespace-nowrap relative"
                       onClick={(e) => {
                         if (hasDropdownItems) e.preventDefault();
                       }}
@@ -166,6 +168,8 @@ export default function Navbar({ initialMenu }) {
                             <div className="flex flex-col gap-1">
                               {item.dropdown_items.map((dropdown, idx) => {
                                 const hasSubItems = dropdown.sub_items && dropdown.sub_items.length > 0;
+                                const dropdownTargetHref = resolveHref(dropdown);
+
                                 return (
                                   <div key={dropdown.id || idx} className="group/sub relative">
                                     {hasSubItems ? (
@@ -178,8 +182,20 @@ export default function Navbar({ initialMenu }) {
                                         </div>
                                         <SubFlyout items={dropdown.sub_items} />
                                       </>
+                                    ) : dropdownTargetHref.startsWith("http") ? (
+                                      <a
+                                        href={dropdownTargetHref}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="block py-2 px-3 text-sm font-medium hover:bg-[#F7FAFF] hover:text-[#1E90FF] rounded-md transition-colors"
+                                      >
+                                        {dropdown.label}
+                                      </a>
                                     ) : (
-                                      <Link to={dropdown.href || "#"} className="block py-2 px-3 text-sm font-medium hover:bg-[#F7FAFF] hover:text-[#1E90FF] rounded-md transition-colors">
+                                      <Link
+                                        to={dropdownTargetHref}
+                                        className="block py-2 px-3 text-sm font-medium hover:bg-[#F7FAFF] hover:text-[#1E90FF] rounded-md transition-colors"
+                                      >
                                         {dropdown.label}
                                       </Link>
                                     )}
@@ -200,6 +216,8 @@ export default function Navbar({ initialMenu }) {
             <div className="xl:hidden flex items-center justify-between w-full">
                <span className="text-white font-semibold text-sm uppercase tracking-wider">Menu</span>
                <button
+                 type="button"
+                 aria-label="Toggle navigation menu"
                  className="flex flex-col justify-center items-center gap-[4px] w-9 h-9 rounded cursor-pointer bg-white/10 hover:bg-white/20 transition-colors"
                  onClick={() => setMobileOpen(!mobileOpen)}
                >
@@ -220,7 +238,12 @@ export default function Navbar({ initialMenu }) {
       >
         <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-white sticky top-0 z-10">
           <span className="text-[15px] font-bold text-[#1E90FF] uppercase tracking-wider">Navigation</span>
-          <button onClick={() => setMobileOpen(false)} className="p-2 bg-gray-50 rounded-full hover:bg-gray-100">
+          <button
+            type="button"
+            aria-label="Close menu"
+            onClick={() => setMobileOpen(false)}
+            className="p-2 bg-gray-50 rounded-full hover:bg-gray-100 cursor-pointer"
+          >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4 text-gray-700">
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -231,13 +254,15 @@ export default function Navbar({ initialMenu }) {
           {sortedMenu.map((item) => {
             const hasDropdownItems = item.dropdown_items && item.dropdown_items.length > 0;
             const isAccordionOpen = mobileAccordion === item.id;
+            const resolvedItemHref = resolveHref(item);
 
             return (
               <div key={item.id} className="mb-1">
                 {hasDropdownItems ? (
                   <>
                     <button
-                      className={`w-full flex items-center justify-between p-3 text-[14.5px] font-semibold uppercase text-left rounded-lg transition-colors ${
+                      type="button"
+                      className={`w-full flex items-center justify-between p-3 text-[14.5px] font-semibold uppercase text-left rounded-lg transition-colors cursor-pointer ${
                         isAccordionOpen ? "bg-[#F7FAFF] text-[#1E90FF]" : "text-gray-800 hover:bg-gray-50"
                       }`}
                       onClick={() => setMobileAccordion(isAccordionOpen ? null : item.id)}
@@ -252,31 +277,67 @@ export default function Navbar({ initialMenu }) {
                         {item.dropdown_items.map((dropdown, idx) => {
                           const hasSubItems = dropdown.sub_items && dropdown.sub_items.length > 0;
                           const isSubAccordionOpen = mobileSubAccordion === dropdown.id;
+                          const dropdownTargetHref = resolveHref(dropdown);
+
                           return (
                             <div key={dropdown.id || idx}>
                               {hasSubItems ? (
                                 <>
                                   <button
-                                    className="w-full flex items-center justify-between p-2 text-sm font-medium text-gray-700 hover:text-[#1E90FF] rounded-md transition-colors"
+                                    type="button"
+                                    className="w-full flex items-center justify-between p-2 text-sm font-medium text-gray-700 hover:text-[#1E90FF] rounded-md transition-colors cursor-pointer"
                                     onClick={() => setMobileSubAccordion(isSubAccordionOpen ? null : dropdown.id)}
                                   >
                                     <span>{dropdown.label}</span>
                                     <svg className={`w-3 h-3 transition-transform ${isSubAccordionOpen ? "rotate-180" : ""}`} viewBox="0 0 20 20" fill="currentColor">
-                                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                                     </svg>
                                   </button>
                                   <div className={`overflow-hidden transition-all duration-300 ${isSubAccordionOpen ? "max-h-[500px]" : "max-h-0"}`}>
                                     <div className="pl-3 ml-2 border-l border-gray-100 flex flex-col mt-1 mb-2 gap-1">
-                                      {dropdown.sub_items.map((sub, subIdx) => (
-                                        <Link key={sub.id || subIdx} to={sub.href || "#"} onClick={() => setMobileOpen(false)} className="p-1.5 text-[13px] text-gray-500 hover:text-[#1E90FF]">
-                                          {sub.label}
-                                        </Link>
-                                      ))}
+                                      {dropdown.sub_items.map((sub, subIdx) => {
+                                        const subTargetHref = resolveHref(sub);
+                                        return subTargetHref.startsWith("http") ? (
+                                          <a
+                                            key={sub.id || subIdx}
+                                            href={subTargetHref}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            onClick={() => setMobileOpen(false)}
+                                            className="p-1.5 text-[13px] text-gray-500 hover:text-[#1E90FF]"
+                                          >
+                                            {sub.label}
+                                          </a>
+                                        ) : (
+                                          <Link
+                                            key={sub.id || subIdx}
+                                            to={subTargetHref}
+                                            onClick={() => setMobileOpen(false)}
+                                            className="p-1.5 text-[13px] text-gray-500 hover:text-[#1E90FF]"
+                                          >
+                                            {sub.label}
+                                          </Link>
+                                        );
+                                      })}
                                     </div>
                                   </div>
                                 </>
+                              ) : dropdownTargetHref.startsWith("http") ? (
+                                <a
+                                  href={dropdownTargetHref}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={() => setMobileOpen(false)}
+                                  className="block p-2 text-sm font-medium text-gray-700 hover:text-[#1E90FF] rounded-md transition-colors"
+                                >
+                                  {dropdown.label}
+                                </a>
                               ) : (
-                                <Link to={dropdown.href || "#"} onClick={() => setMobileOpen(false)} className="block p-2 text-sm font-medium text-gray-700 hover:text-[#1E90FF] rounded-md transition-colors">
+                                <Link
+                                  to={dropdownTargetHref}
+                                  onClick={() => setMobileOpen(false)}
+                                  className="block p-2 text-sm font-medium text-gray-700 hover:text-[#1E90FF] rounded-md transition-colors"
+                                >
                                   {dropdown.label}
                                 </Link>
                               )}
@@ -286,9 +347,19 @@ export default function Navbar({ initialMenu }) {
                       </div>
                     </div>
                   </>
+                ) : resolvedItemHref.startsWith("http") ? (
+                  <a
+                    href={resolvedItemHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex p-3 text-[14.5px] font-semibold uppercase text-gray-800 hover:bg-gray-50 rounded-lg transition-colors"
+                  >
+                    {item.label}
+                  </a>
                 ) : (
                   <Link
-                    to={item.href || "#"}
+                    to={resolvedItemHref}
                     onClick={() => setMobileOpen(false)}
                     className="flex p-3 text-[14.5px] font-semibold uppercase text-gray-800 hover:bg-gray-50 rounded-lg transition-colors"
                   >
@@ -341,11 +412,28 @@ function SubFlyout({ items }) {
       style={dir === "right-full" ? { left: "auto", right: "100%", paddingRight: "8px" } : { paddingLeft: "8px" }}
     >
       <div className={`bg-white shadow-lg border border-gray-100 rounded-md p-2 mt-2 ${dir === "right-full" ? "border-r-[3px] border-r-[#FF7B12]" : "border-l-[3px] border-l-[#FF7B12]"}`}>
-        {items.map((sub, subIdx) => (
-          <Link key={sub.id || subIdx} to={sub.href || "#"} className="block px-3 py-2 text-sm font-medium text-gray-700 hover:bg-[#F7FAFF] hover:text-[#1E90FF] rounded transition-colors">
-            {sub.label}
-          </Link>
-        ))}
+        {items.map((sub, subIdx) => {
+          const targetHref = resolveHref(sub);
+          return targetHref.startsWith("http") ? (
+            <a
+              key={sub.id || subIdx}
+              href={targetHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block px-3 py-2 text-sm font-medium text-gray-700 hover:bg-[#F7FAFF] hover:text-[#1E90FF] rounded transition-colors"
+            >
+              {sub.label}
+            </a>
+          ) : (
+            <Link
+              key={sub.id || subIdx}
+              to={targetHref}
+              className="block px-3 py-2 text-sm font-medium text-gray-700 hover:bg-[#F7FAFF] hover:text-[#1E90FF] rounded transition-colors"
+            >
+              {sub.label}
+            </Link>
+          );
+        })}
       </div>
     </div>
   );
