@@ -232,14 +232,14 @@ export default function PremiumNoticeBoard({ data }) {
 
   return (
     <div className="w-full flex flex-col">
-      {/* New Marquee Banner on Top */}
+      {/* Marquee Banner on Top */}
       <MarqueeBanner data={data} />
       
-      {/* Original Premium Cards Section */}
+      {/* Premium Cards Section */}
       <section
-        className="relative w-full px-4 py-10 bg-white"
+        className="relative w-full px-4 sm:px-6 lg:px-8 py-10 sm:py-14 bg-white"
       >
-        <div className="mx-auto flex max-w-6xl flex-col gap-6 sm:flex-row">
+        <div className="mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl w-full">
           {columns.map((col, idx) => (
             <Column key={col.key} column={col} idx={idx} />
           ))}

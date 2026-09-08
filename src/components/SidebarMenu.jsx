@@ -12,16 +12,24 @@ export default function SidebarMenu({ menuData }) {
   // Floating Ball position & drag state (mobile only)
   const [ballPos, setBallPos] = useState({ x: null, y: null });
   const isDraggingRef = useRef(false);
-  const dragStartPosRef = useRef({ x: 0, y: 0, ballX: 0, ballY: 0 });
-  const hasMovedRef = useRef(false);
+  const dragStartPosRef = useRef({ x: 0, y: 0, ballX: 0, ballY: 0, startTime: 0 });
+  const justDraggedRef = useRef(false);
   const ballRef = useRef(null);
 
   // Initialize ball position near bottom-right on mount
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const initialX = window.innerWidth - 64;
-      const initialY = window.innerHeight - 110;
-      setBallPos({ x: Math.max(16, initialX), y: Math.max(80, initialY) });
+      const updateDefaultPos = () => {
+        const initialX = window.innerWidth - 64;
+        const initialY = window.innerHeight - 120;
+        setBallPos((prev) => ({
+          x: prev.x !== null ? Math.min(Math.max(12, prev.x), window.innerWidth - 60) : Math.max(16, initialX),
+          y: prev.y !== null ? Math.min(Math.max(60, prev.y), window.innerHeight - 80) : Math.max(80, initialY),
+        }));
+      };
+      updateDefaultPos();
+      window.addEventListener("resize", updateDefaultPos);
+      return () => window.removeEventListener("resize", updateDefaultPos);
     }
   }, []);
 
@@ -42,16 +50,16 @@ export default function SidebarMenu({ menuData }) {
     }
   }, [isOpen]);
 
-  // Touch Drag Handlers for Floating Ball
+  // Touch Drag Handlers for Physical Touchscreens
   const handleTouchStart = (e) => {
     const touch = e.touches[0];
     isDraggingRef.current = true;
-    hasMovedRef.current = false;
     dragStartPosRef.current = {
       x: touch.clientX,
       y: touch.clientY,
       ballX: ballPos.x ?? (window.innerWidth - 64),
-      ballY: ballPos.y ?? (window.innerHeight - 110),
+      ballY: ballPos.y ?? (window.innerHeight - 120),
+      startTime: Date.now(),
     };
   };
 
@@ -60,61 +68,74 @@ export default function SidebarMenu({ menuData }) {
     const touch = e.touches[0];
     const dx = touch.clientX - dragStartPosRef.current.x;
     const dy = touch.clientY - dragStartPosRef.current.y;
+    const distance = Math.hypot(dx, dy);
 
-    if (Math.hypot(dx, dy) > 6) {
-      hasMovedRef.current = true;
+    // Only update position if actual drag movement exceeds slop threshold
+    if (distance > 10) {
+      justDraggedRef.current = true;
+      const maxX = window.innerWidth - 56;
+      const maxY = window.innerHeight - 60;
+      const newX = Math.min(Math.max(12, dragStartPosRef.current.ballX + dx), maxX);
+      const newY = Math.min(Math.max(60, dragStartPosRef.current.ballY + dy), maxY);
+      setBallPos({ x: newX, y: newY });
     }
-
-    const maxX = window.innerWidth - 56;
-    const maxY = window.innerHeight - 56;
-    const newX = Math.min(Math.max(12, dragStartPosRef.current.ballX + dx), maxX);
-    const newY = Math.min(Math.max(70, dragStartPosRef.current.ballY + dy), maxY);
-
-    setBallPos({ x: newX, y: newY });
   };
 
-  const handleTouchEnd = () => {
+  const handleTouchEnd = (e) => {
     isDraggingRef.current = false;
-    if (!hasMovedRef.current) {
+    const duration = Date.now() - dragStartPosRef.current.startTime;
+    
+    // If touched without significant movement or quick tap (<300ms and not dragged far), open drawer
+    if (!justDraggedRef.current || duration < 250) {
       setIsOpen(true);
     }
+
+    // Reset dragged flag after short delay to prevent stray clicks
+    setTimeout(() => {
+      justDraggedRef.current = false;
+    }, 150);
   };
 
-  // Mouse Drag Handlers for Desktop/Emulation testing
+  // Mouse Drag Handlers for Desktop/Laptop Emulation
   const handleMouseDown = (e) => {
     isDraggingRef.current = true;
-    hasMovedRef.current = false;
     dragStartPosRef.current = {
       x: e.clientX,
       y: e.clientY,
       ballX: ballPos.x ?? (window.innerWidth - 64),
-      ballY: ballPos.y ?? (window.innerHeight - 110),
+      ballY: ballPos.y ?? (window.innerHeight - 120),
+      startTime: Date.now(),
     };
 
     const onMouseMove = (moveEvent) => {
       if (!isDraggingRef.current) return;
       const dx = moveEvent.clientX - dragStartPosRef.current.x;
       const dy = moveEvent.clientY - dragStartPosRef.current.y;
+      const distance = Math.hypot(dx, dy);
 
-      if (Math.hypot(dx, dy) > 6) {
-        hasMovedRef.current = true;
+      if (distance > 8) {
+        justDraggedRef.current = true;
+        const maxX = window.innerWidth - 56;
+        const maxY = window.innerHeight - 60;
+        const newX = Math.min(Math.max(12, dragStartPosRef.current.ballX + dx), maxX);
+        const newY = Math.min(Math.max(60, dragStartPosRef.current.ballY + dy), maxY);
+        setBallPos({ x: newX, y: newY });
       }
-
-      const maxX = window.innerWidth - 56;
-      const maxY = window.innerHeight - 56;
-      const newX = Math.min(Math.max(12, dragStartPosRef.current.ballX + dx), maxX);
-      const newY = Math.min(Math.max(70, dragStartPosRef.current.ballY + dy), maxY);
-
-      setBallPos({ x: newX, y: newY });
     };
 
     const onMouseUp = () => {
       isDraggingRef.current = false;
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("mouseup", onMouseUp);
-      if (!hasMovedRef.current) {
+
+      const duration = Date.now() - dragStartPosRef.current.startTime;
+      if (!justDraggedRef.current || duration < 250) {
         setIsOpen(true);
       }
+
+      setTimeout(() => {
+        justDraggedRef.current = false;
+      }, 150);
     };
 
     window.addEventListener("mousemove", onMouseMove);
@@ -279,30 +300,38 @@ export default function SidebarMenu({ menuData }) {
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         onMouseDown={handleMouseDown}
-        style={
-          ballPos.x !== null
-            ? { left: `${ballPos.x}px`, top: `${ballPos.y}px` }
-            : { right: "16px", bottom: "100px" }
-        }
-        className="md:hidden fixed z-[2200] touch-none select-none cursor-grab active:cursor-grabbing"
+        style={{
+          touchAction: "none",
+          left: ballPos.x !== null ? `${ballPos.x}px` : undefined,
+          right: ballPos.x === null ? "16px" : undefined,
+          top: ballPos.y !== null ? `${ballPos.y}px` : undefined,
+          bottom: ballPos.y === null ? "100px" : undefined,
+        }}
+        className="md:hidden fixed z-[3000] select-none cursor-grab active:cursor-grabbing"
         title="Drag to move, tap to open navigation"
       >
         <button
           type="button"
           aria-label="Open sidebar menu"
-          className="relative w-12 h-12 rounded-full bg-gradient-to-br from-[#005bb5] to-[#003d7a] text-white shadow-xl shadow-[#005bb5]/35 flex items-center justify-center border-2 border-[#ff7f00] active:scale-95 transition-transform"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (!justDraggedRef.current) {
+              setIsOpen(true);
+            }
+          }}
+          className="relative w-13 h-13 rounded-full bg-gradient-to-br from-[#005bb5] to-[#003d7a] text-white shadow-2xl shadow-[#005bb5]/50 flex items-center justify-center border-2 border-[#ff7f00] active:scale-95 transition-transform cursor-pointer"
         >
           {/* Animated Glow Ping */}
-          <span className="absolute -inset-0.5 rounded-full bg-[#ff7f00]/30 animate-ping pointer-events-none opacity-60" />
+          <span className="absolute -inset-1 rounded-full bg-[#ff7f00]/35 animate-ping pointer-events-none opacity-70" />
           {/* 3-line hamburger icon */}
-          <Menu className="w-5 h-5 text-white relative z-10" />
+          <Menu className="w-6 h-6 text-white relative z-10" />
         </button>
       </div>
 
       {/* ─── 3. Mobile Top-to-Bottom Slide-Down Window Slider ─── */}
       {/* Backdrop */}
       <div
-        className={`md:hidden fixed inset-0 bg-black/50 backdrop-blur-xs z-[2400] transition-opacity duration-300 ${
+        className={`md:hidden fixed inset-0 bg-black/50 backdrop-blur-xs z-[3100] transition-opacity duration-300 ${
           isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         }`}
         onClick={() => setIsOpen(false)}
@@ -310,7 +339,7 @@ export default function SidebarMenu({ menuData }) {
 
       {/* Slide-Down Window Panel (From Top to Bottom) */}
       <div
-        className={`md:hidden fixed top-0 left-0 right-0 max-h-[85vh] bg-white rounded-b-2xl shadow-2xl z-[2500] flex flex-col overflow-hidden transition-transform duration-300 ease-out transform ${
+        className={`md:hidden fixed top-0 left-0 right-0 max-h-[85vh] bg-white rounded-b-2xl shadow-2xl z-[3200] flex flex-col overflow-hidden transition-transform duration-300 ease-out transform ${
           isOpen ? "translate-y-0" : "-translate-y-full pointer-events-none"
         }`}
       >

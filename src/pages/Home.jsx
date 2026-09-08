@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getStrapiMediaUrl } from "../lib/strapi";
+import { getStrapiMediaUrl, getStrapiUrl } from "../lib/strapi";
 import HeroSection from "../components/home/HeroSection";
 import QuickLinksRow from "../components/home/QuickLinksRow";
 import DepartmentsLeadership from "../components/home/DepartmentsLeadership";
@@ -37,8 +37,13 @@ export default function Home() {
       "populate[sections][on][sections.partner-logos][populate][partners][populate][image]=true",
     ].join("&");
 
-    fetch(`${import.meta.env.VITE_STRAPI_URL || "http://localhost:1337"}/api/pages?${query}`)
-      .then((res) => res.json())
+    const endpoint = getStrapiUrl(`/api/pages?${query}`);
+
+    fetch(endpoint)
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
       .then((json) => {
         const fetched = json?.data?.[0]?.sections;
         if (fetched && fetched.length) {

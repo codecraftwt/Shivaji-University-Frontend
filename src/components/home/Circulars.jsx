@@ -174,7 +174,7 @@ export default function Circulars({ data }) {
         <div className="grid grid-cols-1 lg:grid-cols-[290px_1fr] gap-6 lg:gap-0">
           {/* Category rail */}
           <div
-            className="relative rounded-2xl lg:rounded-r-none overflow-hidden transition-all duration-700 ease-out"
+            className="relative rounded-2xl lg:rounded-r-none overflow-hidden transition-all duration-700 ease-out shadow-sm"
             style={{
               background: `linear-gradient(165deg, ${NAVY_MID} 0%, ${NAVY_DEEP} 100%)`,
               opacity: sectionInView ? 1 : 0,
@@ -182,11 +182,9 @@ export default function Circulars({ data }) {
               boxShadow: sectionInView ? `0 24px 48px -20px ${NAVY_DEEP}66` : "none",
             }}
           >
-
-
             <div
               ref={railRef}
-              className="relative flex lg:flex-col gap-1 overflow-x-auto lg:overflow-visible px-3 py-3 lg:pt-3 lg:pb-6"
+              className="relative flex lg:flex-col gap-1.5 overflow-x-auto lg:overflow-visible scrollbar-hide px-3 py-2.5 lg:pt-3 lg:pb-6"
             >
               {/* sliding indicator */}
               <div
@@ -215,18 +213,19 @@ export default function Circulars({ data }) {
                     key={group.category}
                     ref={(el) => (tabRefs.current[group.category] = el)}
                     onClick={() => setActive(group.category)}
-                    className="relative z-10 flex-shrink-0 lg:flex-shrink text-left px-4 py-3.5 text-sm font-semibold rounded-lg transition-all duration-500 ease-out whitespace-nowrap lg:whitespace-normal"
+                    className="relative z-10 flex-shrink-0 lg:flex-shrink text-left px-3.5 sm:px-4 py-2.5 sm:py-3.5 text-xs sm:text-sm font-semibold rounded-lg transition-all duration-300 ease-out whitespace-nowrap lg:whitespace-normal"
                     style={{
                       color: isActive ? "#FFFFFF" : "#9FB0C4",
+                      backgroundColor: isActive ? "rgba(255,255,255,0.12)" : "transparent",
                       opacity: sectionInView ? 1 : 0,
                       transform: sectionInView ? "translateX(0)" : "translateX(-12px)",
                       transitionDelay: sectionInView ? `${150 + idx * 70}ms` : "0ms",
                     }}
                   >
-                    <span className="flex items-center justify-between gap-3">
+                    <span className="flex items-center justify-between gap-2.5 sm:gap-3">
                       {CATEGORY_DISPLAY[group.category] || group.category}
                       <span
-                        className="text-[11px] font-bold px-2 py-0.5 rounded-full transition-colors duration-300 tabular-nums"
+                        className="text-[10px] sm:text-[11px] font-bold px-2 py-0.5 rounded-full transition-colors duration-300 tabular-nums"
                         style={{
                           backgroundColor: isActive ? GOLD : "#FFFFFF1A",
                           color: isActive ? NAVY_DEEP : "#C9D6E4",
@@ -243,11 +242,9 @@ export default function Circulars({ data }) {
 
           {/* Document list */}
           <div
-            className="border rounded-2xl lg:rounded-l-none overflow-hidden transition-all duration-700 ease-out"
+            className="border border-[#0A2E4D]/10 lg:border-l-0 rounded-2xl lg:rounded-l-none overflow-hidden transition-all duration-700 ease-out"
             style={{
               backgroundColor: "#FFFFFF",
-              borderColor: `${NAVY_DEEP}14`,
-              borderLeftWidth: 0,
               opacity: sectionInView ? 1 : 0,
               transform: sectionInView ? "translateY(0)" : "translateY(20px)",
               transitionDelay: "150ms",

@@ -105,12 +105,12 @@ export default function ImportantLinksStats({ data }) {
   }, [links]);
 
   return (
-    <section className="py-12 bg-white">
+    <section className="py-10 sm:py-16 bg-white">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <h2 className="text-3xl font-bold text-[#007bff] mb-10">Other Important Links</h2>
+        <h2 className="text-2xl sm:text-3xl font-bold text-[#007bff] mb-6 sm:mb-10">Other Important Links</h2>
         <div
           ref={carouselRef}
-          className="flex gap-8 overflow-x-auto scrollbar-hide mb-12 py-6 px-4 select-none"
+          className="flex gap-4 sm:gap-8 overflow-x-auto scrollbar-hide mb-8 sm:mb-12 py-4 sm:py-6 px-2 sm:px-4 select-none"
         >
           {links.map((link, i) => (
             <a
@@ -118,18 +118,18 @@ export default function ImportantLinksStats({ data }) {
               href={link.url}
               target={link.url && link.url !== "#" ? "_blank" : "_self"}
               rel="noreferrer"
-              className="group relative flex items-center justify-center shrink-0 bg-white border border-gray-100 rounded-2xl p-8 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_10px_30px_-5px_rgba(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 w-64 h-44"
+              className="group relative flex items-center justify-center shrink-0 bg-white border border-gray-100 rounded-2xl p-4 sm:p-8 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_10px_30px_-5px_rgba(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 w-48 h-32 sm:w-64 sm:h-44"
               title={link.name}
             >
               {/* Double Border Corner Design on Hover */}
               
               {/* Top-Left Corners (Blue #1E90FF) */}
-              <div className="absolute top-[-6px] left-[-6px] w-10 h-10 border-t-[3px] border-l-[3px] border-[#1E90FF] opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 pointer-events-none rounded-tl"></div>
-              <div className="absolute top-[-12px] left-[-12px] w-14 h-14 border-t-[3px] border-l-[3px] border-[#1E90FF]/50 opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 delay-75 pointer-events-none rounded-tl"></div>
+              <div className="absolute top-[-6px] left-[-6px] w-8 sm:w-10 h-8 sm:h-10 border-t-[3px] border-l-[3px] border-[#1E90FF] opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 pointer-events-none rounded-tl"></div>
+              <div className="absolute top-[-12px] left-[-12px] w-12 sm:w-14 h-12 sm:h-14 border-t-[3px] border-l-[3px] border-[#1E90FF]/50 opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 delay-75 pointer-events-none rounded-tl"></div>
 
               {/* Bottom-Right Corners (Orange #FF7B12) */}
-              <div className="absolute bottom-[-6px] right-[-6px] w-10 h-10 border-b-[3px] border-r-[3px] border-[#FF7B12] opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 pointer-events-none rounded-br"></div>
-              <div className="absolute bottom-[-12px] right-[-12px] w-14 h-14 border-b-[3px] border-r-[3px] border-[#FF7B12]/50 opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 delay-75 pointer-events-none rounded-br"></div>
+              <div className="absolute bottom-[-6px] right-[-6px] w-8 sm:w-10 h-8 sm:h-10 border-b-[3px] border-r-[3px] border-[#FF7B12] opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 pointer-events-none rounded-br"></div>
+              <div className="absolute bottom-[-12px] right-[-12px] w-12 sm:w-14 h-12 sm:h-14 border-b-[3px] border-r-[3px] border-[#FF7B12]/50 opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 delay-75 pointer-events-none rounded-br"></div>
 
               {link.imageUrl ? (
                 <img
@@ -139,23 +139,23 @@ export default function ImportantLinksStats({ data }) {
                   className="h-full w-full object-contain transition-all duration-300 group-hover:scale-105"
                 />
               ) : (
-                <span className="text-sm font-semibold text-gray-400">{link.name || "Logo"}</span>
+                <span className="text-xs sm:text-sm font-semibold text-gray-400">{link.name || "Logo"}</span>
               )}
             </a>
           ))}
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-6 text-center">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5 sm:gap-6 text-center">
           {stats.map((stat, i) => (
             <div
               key={i}
-              className="group relative rounded-2xl bg-white transition-all duration-500 hover:-translate-y-2 shadow-[0_12px_40px_-6px_rgba(0,0,0,0.15)] hover:shadow-[0_15px_30px_-10px_rgba(30,144,255,0.3)] overflow-hidden flex flex-col justify-center min-h-[140px] border border-gray-100 p-6 items-center text-center hover:border-[#1E90FF]/40"
+              className="group relative rounded-2xl bg-white transition-all duration-500 hover:-translate-y-2 shadow-[0_8px_30px_-6px_rgba(0,0,0,0.12)] hover:shadow-[0_15px_30px_-10px_rgba(30,144,255,0.3)] overflow-hidden flex flex-col justify-center min-h-[110px] sm:min-h-[140px] border border-gray-100 p-4 sm:p-6 items-center text-center hover:border-[#1E90FF]/40"
             >
-              <div className="text-3xl font-black text-[#1E90FF] mb-2 group-hover:text-[#FF7B12] transition-colors duration-500 drop-shadow-sm group-hover:scale-110">
+              <div className="text-2xl sm:text-3xl font-black text-[#1E90FF] mb-1 sm:mb-2 group-hover:text-[#FF7B12] transition-colors duration-500 drop-shadow-sm group-hover:scale-110">
                 <StatCounter value={stat.value} />
               </div>
-              <div className="text-xs font-bold text-gray-500 tracking-widest uppercase leading-snug group-hover:text-gray-900 transition-colors duration-500">
+              <div className="text-[11px] sm:text-xs font-bold text-gray-500 tracking-wider uppercase leading-snug group-hover:text-gray-900 transition-colors duration-500">
                 {stat.label}
               </div>
             </div>

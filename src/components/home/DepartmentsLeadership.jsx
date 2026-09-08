@@ -237,7 +237,7 @@ export default function DepartmentsLeadership({ data }) {
 
           <div
             ref={leadershipRef}
-            className="flex gap-5 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-hide py-4 px-2 -mx-2"
+            className="flex gap-4 sm:gap-5 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-hide py-4 px-1 -mx-1"
           >
             {leadership.map((person, i) => (
               <div
@@ -246,7 +246,7 @@ export default function DepartmentsLeadership({ data }) {
                   transitionDelay:
                     revealed && !reduceMotion ? `${150 + i * 120}ms` : "0ms",
                 }}
-                className={`group relative flex-shrink-0 w-full sm:w-[calc(50%-10px)] snap-start snap-always overflow-hidden rounded-2xl border border-gray-100 bg-white p-8 text-center shadow-sm transition-all duration-500 ease-out hover:-translate-y-1 hover:shadow-lg hover:shadow-[#005bb5]/10 ${
+                className={`group relative flex-shrink-0 w-[82vw] max-w-[290px] sm:w-[calc(50%-10px)] sm:max-w-none snap-center overflow-hidden rounded-2xl border border-gray-100 bg-white p-6 sm:p-8 text-center shadow-sm transition-all duration-500 ease-out hover:-translate-y-1 hover:shadow-lg hover:shadow-[#005bb5]/10 ${
                   revealed
                     ? "translate-y-0 opacity-100"
                     : "translate-y-4 opacity-0"
@@ -254,19 +254,19 @@ export default function DepartmentsLeadership({ data }) {
               >
                 <span className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-[#ff7f00] to-[#ffb347]" />
 
-                <div className="relative mx-auto mb-5 w-fit">
+                <div className="relative mx-auto mb-4 sm:mb-5 w-fit">
                   <span className="absolute -inset-2 rounded-full bg-gradient-to-br from-[#ff7f00]/25 to-[#005bb5]/15" />
                   <img
                     src={getStrapiMediaUrl(person.photo)}
                     alt={person.role}
-                    className="relative h-32 w-32 rounded-full border-4 border-white object-cover shadow-md transition-transform duration-500 group-hover:scale-105"
+                    className="relative h-28 w-28 sm:h-32 sm:w-32 rounded-full border-4 border-white object-cover shadow-md transition-transform duration-500 group-hover:scale-105"
                   />
                 </div>
 
-                <span className="text-[11px] font-semibold uppercase tracking-[2px] text-[#ff7f00]">
+                <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[1.5px] sm:tracking-[2px] text-[#ff7f00]">
                   {person.role}
                 </span>
-                <h3 className="mt-2 text-[17px] font-bold text-[#005bb5]">
+                <h3 className="mt-1.5 sm:mt-2 text-[15px] sm:text-[17px] font-bold text-[#005bb5]">
                   {person.name}
                 </h3>
               </div>
