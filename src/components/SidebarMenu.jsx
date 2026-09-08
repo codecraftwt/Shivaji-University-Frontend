@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { resolveHref } from "../lib/strapi";
-import { X, Menu, ChevronRight } from "lucide-react";
+import { X, Menu, ChevronRight, Move } from "lucide-react";
 
 export default function SidebarMenu({ menuData }) {
   const location = useLocation();
@@ -11,10 +11,20 @@ export default function SidebarMenu({ menuData }) {
 
   // Floating Ball position & drag state (mobile only)
   const [ballPos, setBallPos] = useState({ x: null, y: null });
-  const isDraggingRef = useRef(false);
+  const [isDragUnlocked, setIsDragUnlocked] = useState(false);
+  const [isHolding, setIsHolding] = useState(false);
+  
+  const longPressTimerRef = useRef(null);
+  const isDragUnlockedRef = useRef(false);
   const dragStartPosRef = useRef({ x: 0, y: 0, ballX: 0, ballY: 0, startTime: 0 });
+  const hasMovedFarRef = useRef(false);
   const justDraggedRef = useRef(false);
   const ballRef = useRef(null);
+
+  // Synchronize ref with state
+  useEffect(() => {
+    isDragUnlockedRef.current = isDragUnlocked;
+  }, [isDragUnlocked]);
 
   // Initialize ball position near bottom-right on mount
   useEffect(() => {
@@ -50,10 +60,14 @@ export default function SidebarMenu({ menuData }) {
     }
   }, [isOpen]);
 
-  // Touch Drag Handlers for Physical Touchscreens
+  // ─── Touch Handlers: 2-3s Long-Press to Move, Quick Tap to Open ───
   const handleTouchStart = (e) => {
     const touch = e.touches[0];
-    isDraggingRef.current = true;
+    hasMovedFarRef.current = false;
+    isDragUnlockedRef.current = false;
+    setIsDragUnlocked(false);
+    setIsHolding(true);
+
     dragStartPosRef.current = {
       x: touch.clientX,
       y: touch.clientY,
@@ -61,44 +75,73 @@ export default function SidebarMenu({ menuData }) {
       ballY: ballPos.y ?? (window.innerHeight - 120),
       startTime: Date.now(),
     };
+
+    // Require 1.8s long-press to unlock movable mode
+    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+    longPressTimerRef.current = setTimeout(() => {
+      isDragUnlockedRef.current = true;
+      setIsDragUnlocked(true);
+      setIsHolding(false);
+      // Haptic vibration feedback if supported
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
+        try { navigator.vibrate(60); } catch (_) {}
+      }
+    }, 1800);
   };
 
   const handleTouchMove = (e) => {
-    if (!isDraggingRef.current) return;
     const touch = e.touches[0];
     const dx = touch.clientX - dragStartPosRef.current.x;
     const dy = touch.clientY - dragStartPosRef.current.y;
     const distance = Math.hypot(dx, dy);
 
-    // Only update position if actual drag movement exceeds slop threshold
-    if (distance > 10) {
-      justDraggedRef.current = true;
-      const maxX = window.innerWidth - 56;
-      const maxY = window.innerHeight - 60;
-      const newX = Math.min(Math.max(12, dragStartPosRef.current.ballX + dx), maxX);
-      const newY = Math.min(Math.max(60, dragStartPosRef.current.ballY + dy), maxY);
-      setBallPos({ x: newX, y: newY });
+    // If moved before holding for 2 seconds, cancel long-press
+    if (!isDragUnlockedRef.current) {
+      if (distance > 12) {
+        if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+        setIsHolding(false);
+      }
+      return;
     }
+
+    // Move is unlocked: drag the ball smoothly across screen
+    hasMovedFarRef.current = true;
+    justDraggedRef.current = true;
+    const maxX = window.innerWidth - 56;
+    const maxY = window.innerHeight - 60;
+    const newX = Math.min(Math.max(12, dragStartPosRef.current.ballX + dx), maxX);
+    const newY = Math.min(Math.max(60, dragStartPosRef.current.ballY + dy), maxY);
+    setBallPos({ x: newX, y: newY });
   };
 
-  const handleTouchEnd = (e) => {
-    isDraggingRef.current = false;
-    const duration = Date.now() - dragStartPosRef.current.startTime;
-    
-    // If touched without significant movement or quick tap (<300ms and not dragged far), open drawer
-    if (!justDraggedRef.current || duration < 250) {
+  const handleTouchEnd = () => {
+    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+    setIsHolding(false);
+
+    const wasUnlocked = isDragUnlockedRef.current;
+    const moved = hasMovedFarRef.current;
+
+    setIsDragUnlocked(false);
+    isDragUnlockedRef.current = false;
+
+    // If not in drag mode, it's a regular tap -> instantly open sidebar
+    if (!wasUnlocked) {
       setIsOpen(true);
+    } else if (moved) {
+      // It was dragged to a new place
+      setTimeout(() => {
+        justDraggedRef.current = false;
+      }, 200);
     }
-
-    // Reset dragged flag after short delay to prevent stray clicks
-    setTimeout(() => {
-      justDraggedRef.current = false;
-    }, 150);
   };
 
-  // Mouse Drag Handlers for Desktop/Laptop Emulation
+  // ─── Mouse Handlers for Desktop Testing ───
   const handleMouseDown = (e) => {
-    isDraggingRef.current = true;
+    hasMovedFarRef.current = false;
+    isDragUnlockedRef.current = false;
+    setIsDragUnlocked(false);
+    setIsHolding(true);
+
     dragStartPosRef.current = {
       x: e.clientX,
       y: e.clientY,
@@ -107,35 +150,52 @@ export default function SidebarMenu({ menuData }) {
       startTime: Date.now(),
     };
 
+    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+    longPressTimerRef.current = setTimeout(() => {
+      isDragUnlockedRef.current = true;
+      setIsDragUnlocked(true);
+      setIsHolding(false);
+    }, 1800);
+
     const onMouseMove = (moveEvent) => {
-      if (!isDraggingRef.current) return;
       const dx = moveEvent.clientX - dragStartPosRef.current.x;
       const dy = moveEvent.clientY - dragStartPosRef.current.y;
       const distance = Math.hypot(dx, dy);
 
-      if (distance > 8) {
-        justDraggedRef.current = true;
-        const maxX = window.innerWidth - 56;
-        const maxY = window.innerHeight - 60;
-        const newX = Math.min(Math.max(12, dragStartPosRef.current.ballX + dx), maxX);
-        const newY = Math.min(Math.max(60, dragStartPosRef.current.ballY + dy), maxY);
-        setBallPos({ x: newX, y: newY });
+      if (!isDragUnlockedRef.current) {
+        if (distance > 10) {
+          if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+          setIsHolding(false);
+        }
+        return;
       }
+
+      hasMovedFarRef.current = true;
+      justDraggedRef.current = true;
+      const maxX = window.innerWidth - 56;
+      const maxY = window.innerHeight - 60;
+      const newX = Math.min(Math.max(12, dragStartPosRef.current.ballX + dx), maxX);
+      const newY = Math.min(Math.max(60, dragStartPosRef.current.ballY + dy), maxY);
+      setBallPos({ x: newX, y: newY });
     };
 
     const onMouseUp = () => {
-      isDraggingRef.current = false;
+      if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+      setIsHolding(false);
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("mouseup", onMouseUp);
 
-      const duration = Date.now() - dragStartPosRef.current.startTime;
-      if (!justDraggedRef.current || duration < 250) {
-        setIsOpen(true);
-      }
+      const wasUnlocked = isDragUnlockedRef.current;
+      setIsDragUnlocked(false);
+      isDragUnlockedRef.current = false;
 
-      setTimeout(() => {
-        justDraggedRef.current = false;
-      }, 150);
+      if (!wasUnlocked) {
+        setIsOpen(true);
+      } else {
+        setTimeout(() => {
+          justDraggedRef.current = false;
+        }, 200);
+      }
     };
 
     window.addEventListener("mousemove", onMouseMove);
@@ -307,24 +367,49 @@ export default function SidebarMenu({ menuData }) {
           top: ballPos.y !== null ? `${ballPos.y}px` : undefined,
           bottom: ballPos.y === null ? "100px" : undefined,
         }}
-        className="md:hidden fixed z-[3000] select-none cursor-grab active:cursor-grabbing"
-        title="Drag to move, tap to open navigation"
+        className="md:hidden fixed z-[3000] select-none"
+        title={isDragUnlocked ? "Drag to move around screen" : "Tap to open navigation, hold 2s to move"}
       >
         <button
           type="button"
-          aria-label="Open sidebar menu"
+          aria-label={isDragUnlocked ? "Move navigation ball" : "Open sidebar menu"}
           onClick={(e) => {
             e.stopPropagation();
-            if (!justDraggedRef.current) {
+            if (!justDraggedRef.current && !isDragUnlocked) {
               setIsOpen(true);
             }
           }}
-          className="relative w-13 h-13 rounded-full bg-gradient-to-br from-[#005bb5] to-[#003d7a] text-white shadow-2xl shadow-[#005bb5]/50 flex items-center justify-center border-2 border-[#ff7f00] active:scale-95 transition-transform cursor-pointer"
+          className={`relative w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 cursor-pointer shadow-2xl ${
+            isDragUnlocked
+              ? "bg-gradient-to-br from-[#ff7f00] to-[#d96500] text-white scale-110 ring-4 ring-[#ff7f00]/50 shadow-[#ff7f00]/60 cursor-move"
+              : isHolding
+              ? "bg-gradient-to-br from-[#005bb5] to-[#ff7f00] text-white scale-105 ring-2 ring-[#ff7f00]/40 shadow-[#005bb5]/50"
+              : "bg-gradient-to-br from-[#005bb5] to-[#003d7a] text-white border-2 border-[#ff7f00] shadow-[#005bb5]/50 active:scale-95"
+          }`}
         >
-          {/* Animated Glow Ping */}
-          <span className="absolute -inset-1 rounded-full bg-[#ff7f00]/35 animate-ping pointer-events-none opacity-70" />
-          {/* 3-line hamburger icon */}
-          <Menu className="w-6 h-6 text-white relative z-10" />
+          {/* Animated Glow Ping in normal mode */}
+          {!isDragUnlocked && (
+            <span className="absolute -inset-1 rounded-full bg-[#ff7f00]/35 animate-ping pointer-events-none opacity-70" />
+          )}
+
+          {/* Long press charge ring when holding */}
+          {isHolding && !isDragUnlocked && (
+            <span className="absolute -inset-1.5 rounded-full border-2 border-dashed border-[#ff7f00] animate-spin pointer-events-none" />
+          )}
+
+          {/* Icon switches to Move arrows when drag mode is active, otherwise 3-line hamburger */}
+          {isDragUnlocked ? (
+            <Move className="w-6 h-6 text-white animate-pulse relative z-10" />
+          ) : (
+            <Menu className="w-6 h-6 text-white relative z-10" />
+          )}
+
+          {/* Tooltip badge when drag mode is unlocked */}
+          {isDragUnlocked && (
+            <span className="absolute -top-7 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-md bg-[#0F172A] text-[10px] font-bold text-[#ff7f00] uppercase tracking-wider whitespace-nowrap shadow-md pointer-events-none">
+              Move
+            </span>
+          )}
         </button>
       </div>
 
