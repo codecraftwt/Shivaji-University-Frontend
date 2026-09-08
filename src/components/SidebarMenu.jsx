@@ -8,6 +8,17 @@ export default function SidebarMenu({ menuData }) {
   const currentPath = location.pathname;
 
   const [isOpen, setIsOpen] = useState(false);
+  const [hasScrolled, setHasScrolled] = useState(false);
+
+  // Track scroll position to adjust floating button height (moves up only when ^ ScrollToTop button is visible)
+  useEffect(() => {
+    const handleScroll = () => {
+      setHasScrolled(window.scrollY > 400);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   // Lock body scroll when mobile top-to-bottom drawer is open
   useEffect(() => {
@@ -177,16 +188,18 @@ export default function SidebarMenu({ menuData }) {
         {renderNavList()}
       </aside>
 
-      {/* ─── 2. Mobile Fixed Sidebar Button (Fixed at Bottom-Right above Scroll-to-Top ^ Button) ─── */}
+      {/* ─── 2. Mobile Floating Sidebar Button (Fixed at Bottom-Right, moves down when alone, up when ^ is present) ─── */}
       <button
         type="button"
         aria-label="Open sidebar navigation"
         onClick={() => setIsOpen(true)}
-        className="md:hidden fixed bottom-22 right-6 z-[9990] w-12 h-12 rounded-full bg-gradient-to-br from-[#005bb5] to-[#003d7a] text-white shadow-[0_10px_30px_rgba(0,91,181,0.4)] flex items-center justify-center border-2 border-[#ff7f00] active:scale-90 hover:scale-105 transition-all duration-300 cursor-pointer"
-        title="Open Page Menu"
+        className={`md:hidden fixed right-6 z-[9990] w-12 h-12 rounded-full bg-gradient-to-br from-[#005bb5] via-[#0B4C87] to-[#003d7a] text-white shadow-[0_10px_25px_rgba(0,91,181,0.35)] flex items-center justify-center border border-white/25 active:scale-90 hover:scale-105 transition-all duration-300 ease-out cursor-pointer backdrop-blur-md ${
+          hasScrolled ? "bottom-22" : "bottom-6"
+        }`}
+        title="Open Navigation"
       >
-        {/* Animated Glow Ping */}
-        <span className="absolute -inset-0.5 rounded-full bg-[#ff7f00]/40 animate-ping pointer-events-none opacity-70" />
+        {/* Subtle orange accent badge / ring */}
+        <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#ff7f00] ring-2 ring-white" />
         {/* Sidebar 3-Line Menu Icon */}
         <Menu className="w-5 h-5 text-white relative z-10" />
       </button>
