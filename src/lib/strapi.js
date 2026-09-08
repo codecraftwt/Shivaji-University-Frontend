@@ -87,7 +87,7 @@ export async function getNavItems() {
 
 export async function getMainNavbar() {
   const data = await fetchApi(
-    "/main-navbar?populate[menu_items][populate][dropdown_items][populate][sub_items]=*"
+    "/main-navbar?populate[menu_items][populate][dropdown_items][populate][sub_items][populate][nested_nav_items]=*"
   );
   return data.data;
 }
@@ -292,7 +292,7 @@ export async function getPage(slug, parentSlug) {
 
 export function resolveHref(itemOrHref, label = "") {
   let href = typeof itemOrHref === "string" ? itemOrHref : itemOrHref?.href;
-  let text = typeof itemOrHref === "object" ? (itemOrHref?.label || label) : label;
+  let text = typeof itemOrHref === "object" ? (itemOrHref?.label || itemOrHref?.lable || label) : label;
 
   href = href?.trim() || "";
   text = text?.trim()?.toLowerCase() || "";

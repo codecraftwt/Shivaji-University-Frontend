@@ -14,6 +14,7 @@ export default function Navbar({ initialMenu }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileAccordion, setMobileAccordion] = useState(null);
   const [mobileSubAccordion, setMobileSubAccordion] = useState(null);
+  const [mobileNestedAccordion, setMobileNestedAccordion] = useState(null);
 
   /* ===== Fetch Global Navbar Data ===== */
   useEffect(() => {
@@ -286,35 +287,84 @@ export default function Navbar({ initialMenu }) {
                                     className="w-full flex items-center justify-between p-2 text-sm font-medium text-gray-700 hover:text-[#1E90FF] rounded-md transition-colors cursor-pointer"
                                     onClick={() => setMobileSubAccordion(isSubAccordionOpen ? null : dropdown.id)}
                                   >
-                                    <span>{dropdown.label}</span>
+                                    <span>{dropdown.label || dropdown.lable}</span>
                                     <svg className={`w-3 h-3 transition-transform ${isSubAccordionOpen ? "rotate-180" : ""}`} viewBox="0 0 20 20" fill="currentColor">
-                                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                                     </svg>
                                   </button>
-                                  <div className={`overflow-hidden transition-all duration-300 ${isSubAccordionOpen ? "max-h-[500px]" : "max-h-0"}`}>
+                                  <div className={`overflow-hidden transition-all duration-300 ${isSubAccordionOpen ? "max-h-[1200px]" : "max-h-0"}`}>
                                     <div className="pl-3 ml-2 border-l border-gray-100 flex flex-col mt-1 mb-2 gap-1">
                                       {dropdown.sub_items.map((sub, subIdx) => {
+                                        const nestedList = sub.nested_nav_items || [];
+                                        const hasNested = nestedList.length > 0;
+                                        const isNestedOpen = mobileNestedAccordion === (sub.id || subIdx);
                                         const subTargetHref = resolveHref(sub);
-                                        return subTargetHref.startsWith("http") ? (
-                                          <a
-                                            key={sub.id || subIdx}
-                                            href={subTargetHref}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            onClick={() => setMobileOpen(false)}
-                                            className="p-1.5 text-[13px] text-gray-500 hover:text-[#1E90FF]"
-                                          >
-                                            {sub.label}
-                                          </a>
-                                        ) : (
-                                          <Link
-                                            key={sub.id || subIdx}
-                                            to={subTargetHref}
-                                            onClick={() => setMobileOpen(false)}
-                                            className="p-1.5 text-[13px] text-gray-500 hover:text-[#1E90FF]"
-                                          >
-                                            {sub.label}
-                                          </Link>
+                                        const subLabel = sub.label || sub.lable;
+
+                                        return (
+                                          <div key={sub.id || subIdx} className="flex flex-col">
+                                            {hasNested ? (
+                                              <>
+                                                <button
+                                                  type="button"
+                                                  className="w-full flex items-center justify-between p-1.5 text-[13px] font-medium text-gray-600 hover:text-[#1E90FF] rounded transition-colors cursor-pointer"
+                                                  onClick={() => setMobileNestedAccordion(isNestedOpen ? null : (sub.id || subIdx))}
+                                                >
+                                                  <span>{subLabel}</span>
+                                                  <svg className={`w-3 h-3 transition-transform ${isNestedOpen ? "rotate-180" : ""}`} viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                                                  </svg>
+                                                </button>
+                                                <div className={`overflow-hidden transition-all duration-200 ${isNestedOpen ? "max-h-[600px]" : "max-h-0"}`}>
+                                                  <div className="pl-3 ml-2 border-l border-slate-200 flex flex-col py-1 gap-1">
+                                                    {nestedList.map((nested, nIdx) => {
+                                                      const nestedHref = resolveHref(nested);
+                                                      const nestedLabel = nested.label || nested.lable;
+                                                      return nestedHref.startsWith("http") ? (
+                                                        <a
+                                                          key={nested.id || nIdx}
+                                                          href={nestedHref}
+                                                          target="_blank"
+                                                          rel="noopener noreferrer"
+                                                          onClick={() => setMobileOpen(false)}
+                                                          className="p-1 text-xs text-gray-500 hover:text-[#1E90FF]"
+                                                        >
+                                                          • {nestedLabel}
+                                                        </a>
+                                                      ) : (
+                                                        <Link
+                                                          key={nested.id || nIdx}
+                                                          to={nestedHref}
+                                                          onClick={() => setMobileOpen(false)}
+                                                          className="p-1 text-xs text-gray-500 hover:text-[#1E90FF]"
+                                                        >
+                                                          • {nestedLabel}
+                                                        </Link>
+                                                      );
+                                                    })}
+                                                  </div>
+                                                </div>
+                                              </>
+                                            ) : subTargetHref.startsWith("http") ? (
+                                              <a
+                                                href={subTargetHref}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                onClick={() => setMobileOpen(false)}
+                                                className="p-1.5 text-[13px] text-gray-500 hover:text-[#1E90FF]"
+                                              >
+                                                {subLabel}
+                                              </a>
+                                            ) : (
+                                              <Link
+                                                to={subTargetHref}
+                                                onClick={() => setMobileOpen(false)}
+                                                className="p-1.5 text-[13px] text-gray-500 hover:text-[#1E90FF]"
+                                              >
+                                                {subLabel}
+                                              </Link>
+                                            )}
+                                          </div>
                                         );
                                       })}
                                     </div>
@@ -328,7 +378,7 @@ export default function Navbar({ initialMenu }) {
                                   onClick={() => setMobileOpen(false)}
                                   className="block p-2 text-sm font-medium text-gray-700 hover:text-[#1E90FF] rounded-md transition-colors"
                                 >
-                                  {dropdown.label}
+                                  {dropdown.label || dropdown.lable}
                                 </a>
                               ) : (
                                 <Link
@@ -336,7 +386,7 @@ export default function Navbar({ initialMenu }) {
                                   onClick={() => setMobileOpen(false)}
                                   className="block p-2 text-sm font-medium text-gray-700 hover:text-[#1E90FF] rounded-md transition-colors"
                                 >
-                                  {dropdown.label}
+                                  {dropdown.label || dropdown.lable}
                                 </Link>
                               )}
                             </div>
@@ -395,7 +445,7 @@ function SubFlyout({ items }) {
       const megaPanel = parent.closest("[role='menu']");
       if (!megaPanel) return;
       const panelRect = megaPanel.getBoundingClientRect();
-      if (panelRect.right + 200 > window.innerWidth - 12) setDir("right-full");
+      if (panelRect.right + 300 > window.innerWidth - 12) setDir("right-full");
       else setDir("left-full");
     };
 
@@ -406,29 +456,101 @@ function SubFlyout({ items }) {
   return (
     <div
       ref={ref}
-      className={`absolute ${dir} top-[-10px] pb-5 min-w-[200px] z-[1200] invisible opacity-0 -translate-x-1 group-hover/sub:visible group-hover/sub:opacity-100 group-hover/sub:translate-x-0 transition-all duration-200`}
+      className={`absolute ${dir} top-[-10px] pb-5 min-w-[260px] max-w-[380px] z-[1200] invisible opacity-0 -translate-x-1 group-hover/sub:visible group-hover/sub:opacity-100 group-hover/sub:translate-x-0 transition-all duration-200`}
       style={dir === "right-full" ? { left: "auto", right: "100%", paddingRight: "8px" } : { paddingLeft: "8px" }}
     >
-      <div className={`bg-white shadow-lg border border-gray-100 rounded-md p-2 mt-2 ${dir === "right-full" ? "border-r-[3px] border-r-[#FF7B12]" : "border-l-[3px] border-l-[#FF7B12]"}`}>
+      <div className={`bg-white shadow-xl border border-gray-100 rounded-md p-2 mt-2 flex flex-col gap-0.5 ${dir === "right-full" ? "border-r-[3px] border-r-[#FF7B12]" : "border-l-[3px] border-l-[#FF7B12]"}`}>
         {items.map((sub, subIdx) => {
+          const nestedItems = sub.nested_nav_items || [];
+          const hasNested = nestedItems.length > 0;
           const targetHref = resolveHref(sub);
+          const subLabel = sub.label || sub.lable;
+
+          return (
+            <div key={sub.id || subIdx} className="group/nested relative">
+              {hasNested ? (
+                <>
+                  <div className="flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-700 hover:bg-[#F7FAFF] hover:text-[#1E90FF] rounded cursor-pointer transition-colors">
+                    <span className="pr-2 leading-snug">{subLabel}</span>
+                    <svg className="w-3.5 h-3.5 opacity-60 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <NestedFlyout items={nestedItems} />
+                </>
+              ) : targetHref.startsWith("http") ? (
+                <a
+                  href={targetHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block px-3 py-2 text-sm font-medium text-gray-700 hover:bg-[#F7FAFF] hover:text-[#1E90FF] rounded leading-snug transition-colors"
+                >
+                  {subLabel}
+                </a>
+              ) : (
+                <Link
+                  to={targetHref}
+                  className="block px-3 py-2 text-sm font-medium text-gray-700 hover:bg-[#F7FAFF] hover:text-[#1E90FF] rounded leading-snug transition-colors"
+                >
+                  {subLabel}
+                </Link>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function NestedFlyout({ items }) {
+  const ref = useRef(null);
+  const [dir, setDir] = useState("left-full");
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const parent = el.closest(".group\\/nested");
+    if (!parent) return;
+
+    const open = () => {
+      const parentRect = parent.getBoundingClientRect();
+      if (parentRect.right + 380 > window.innerWidth - 12) setDir("right-full");
+      else setDir("left-full");
+    };
+
+    parent.addEventListener("mouseenter", open);
+    return () => parent.removeEventListener("mouseenter", open);
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      className={`absolute ${dir} top-[-10px] pb-5 min-w-[340px] sm:min-w-[380px] max-w-[500px] z-[1300] invisible opacity-0 -translate-x-1 group-hover/nested:visible group-hover/nested:opacity-100 group-hover/nested:translate-x-0 transition-all duration-200`}
+      style={dir === "right-full" ? { left: "auto", right: "100%", paddingRight: "8px" } : { paddingLeft: "8px" }}
+    >
+      <div className={`bg-white shadow-2xl border border-gray-100 rounded-md p-2.5 mt-2 flex flex-col gap-1 ${dir === "right-full" ? "border-r-[3px] border-r-[#005bb5]" : "border-l-[3px] border-l-[#005bb5]"}`}>
+        {items.map((item, idx) => {
+          const targetHref = resolveHref(item);
+          const itemLabel = item.label || item.lable;
+
           return targetHref.startsWith("http") ? (
             <a
-              key={sub.id || subIdx}
+              key={item.id || idx}
               href={targetHref}
               target="_blank"
               rel="noopener noreferrer"
-              className="block px-3 py-2 text-sm font-medium text-gray-700 hover:bg-[#F7FAFF] hover:text-[#1E90FF] rounded transition-colors"
+              className="block px-3.5 py-2 text-xs sm:text-[13.5px] font-medium text-gray-700 hover:bg-[#F7FAFF] hover:text-[#005bb5] rounded leading-snug whitespace-normal transition-colors"
             >
-              {sub.label}
+              {itemLabel}
             </a>
           ) : (
             <Link
-              key={sub.id || subIdx}
+              key={item.id || idx}
               to={targetHref}
-              className="block px-3 py-2 text-sm font-medium text-gray-700 hover:bg-[#F7FAFF] hover:text-[#1E90FF] rounded transition-colors"
+              className="block px-3.5 py-2 text-xs sm:text-[13.5px] font-medium text-gray-700 hover:bg-[#F7FAFF] hover:text-[#005bb5] rounded leading-snug whitespace-normal transition-colors"
             >
-              {sub.label}
+              {itemLabel}
             </Link>
           );
         })}
