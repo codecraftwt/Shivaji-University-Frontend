@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { resolveHref } from "../lib/strapi";
-import { X, Menu, ChevronRight } from "lucide-react";
+import { X, Menu, ChevronRight, ChevronDown } from "lucide-react";
 
 export default function SidebarMenu({ menuData }) {
   const location = useLocation();
@@ -9,6 +9,33 @@ export default function SidebarMenu({ menuData }) {
 
   const [isOpen, setIsOpen] = useState(false);
   const [hasScrolled, setHasScrolled] = useState(false);
+  const [openNestedMap, setOpenNestedMap] = useState({});
+
+  const toggleNested = (key) => {
+    setOpenNestedMap((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
+
+  // Auto-expand dropdown if active link is inside a nested item
+  useEffect(() => {
+    if (!menuData?.dropdown_items) return;
+    const newOpen = {};
+    menuData.dropdown_items.forEach((item, itemIdx) => {
+      item.sub_items?.forEach((sub, subIdx) => {
+        const key = `${item.id || itemIdx}-${sub.id || subIdx}`;
+        const isCurrentSub = currentPath === resolveHref(sub);
+        const isNestedActive = sub.nested_nav_items?.some(
+          (nested) => currentPath === resolveHref(nested)
+        );
+        if (isCurrentSub || isNestedActive) {
+          newOpen[key] = true;
+        }
+      });
+    });
+    setOpenNestedMap((prev) => ({ ...prev, ...newOpen }));
+  }, [currentPath, menuData]);
 
   // Track scroll position to adjust floating button height (moves up only when ^ ScrollToTop button is visible)
   useEffect(() => {
@@ -62,10 +89,92 @@ export default function SidebarMenu({ menuData }) {
                     const subLabel = sub.label || sub.lable;
                     const nestedItems = sub.nested_nav_items || [];
                     const hasNested = nestedItems.length > 0;
+                    const nestedKey = `${item.id || idx}-${sub.id || subIdx}`;
+                    const isNestedOpen = !!openNestedMap[nestedKey];
+                    const isAnyChildActive = nestedItems.some(
+                      (nested) => currentPath === resolveHref(nested)
+                    );
 
                     return (
-                      <div key={sub.id || subIdx} className="flex flex-col gap-1">
-                        {isExternal ? (
+                      <div key={sub.id || subIdx} className="flex flex-col">
+                        {hasNested ? (
+                          /* Sub-Item Header with Dropdown Toggle */
+                          <div className="flex items-center justify-between w-full rounded-lg transition-colors group/sub">
+                            {isExternal ? (
+                              <a
+                                href={subHref}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={onItemClick}
+                                className="flex-1 flex items-center gap-2 px-3 py-2 text-xs sm:text-sm font-medium text-gray-600 hover:bg-slate-50 hover:text-[#005bb5] rounded-l-lg truncate"
+                              >
+                                <span className="w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0" />
+                                <span className="truncate">{subLabel}</span>
+                              </a>
+                            ) : subHref && subHref !== "#" && subHref !== "/" ? (
+                              <Link
+                                to={subHref}
+                                onClick={onItemClick}
+                                className={`flex-1 flex items-center gap-2 px-3 py-2 text-xs sm:text-sm font-medium transition-all rounded-l-lg truncate ${
+                                  isSubActive
+                                    ? "bg-[#005bb5] text-white shadow-xs font-semibold"
+                                    : isAnyChildActive
+                                    ? "text-[#005bb5] font-semibold bg-slate-50"
+                                    : "text-gray-600 hover:bg-slate-50 hover:text-[#005bb5]"
+                                }`}
+                              >
+                                <span
+                                  className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                                    isSubActive
+                                      ? "bg-[#ff7f00]"
+                                      : isAnyChildActive
+                                      ? "bg-[#005bb5]"
+                                      : "bg-gray-300"
+                                  }`}
+                                />
+                                <span className="truncate">{subLabel}</span>
+                              </Link>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => toggleNested(nestedKey)}
+                                className={`flex-1 flex items-center gap-2 px-3 py-2 text-xs sm:text-sm font-medium transition-all text-left rounded-l-lg cursor-pointer ${
+                                  isAnyChildActive
+                                    ? "text-[#005bb5] font-semibold bg-slate-50"
+                                    : "text-gray-600 hover:bg-slate-50 hover:text-[#005bb5]"
+                                }`}
+                              >
+                                <span
+                                  className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                                    isAnyChildActive ? "bg-[#005bb5]" : "bg-gray-300"
+                                  }`}
+                                />
+                                <span className="truncate">{subLabel}</span>
+                              </button>
+                            )}
+
+                            {/* Dropdown Toggle Chevron Button */}
+                            <button
+                              type="button"
+                              aria-label={isNestedOpen ? "Collapse sub-menu" : "Expand sub-menu"}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleNested(nestedKey);
+                              }}
+                              className={`p-2 rounded-r-lg transition-colors cursor-pointer flex items-center justify-center hover:bg-slate-100 ${
+                                isSubActive
+                                  ? "bg-[#005bb5] text-white hover:bg-[#004c99]"
+                                  : "text-gray-400 hover:text-[#005bb5]"
+                              }`}
+                            >
+                              <ChevronDown
+                                className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                                  isNestedOpen ? "rotate-180 text-[#ff7f00]" : ""
+                                }`}
+                              />
+                            </button>
+                          </div>
+                        ) : isExternal ? (
                           <a
                             href={subHref}
                             target="_blank"
@@ -95,47 +204,55 @@ export default function SidebarMenu({ menuData }) {
                           </Link>
                         )}
 
-                        {/* 3rd-level Nested Navigation Items */}
+                        {/* 3rd-level Nested Navigation Items (Dropdown Accordion) */}
                         {hasNested && (
-                          <div className="pl-3.5 ml-2.5 border-l border-slate-200 flex flex-col gap-1 my-0.5">
-                            {nestedItems.map((nested, nIdx) => {
-                              const nestedHref = resolveHref(nested);
-                              const isNestedActive = currentPath === nestedHref;
-                              const isNestedExternal = nestedHref.startsWith("http");
-                              const nestedLabel = nested.label || nested.lable;
+                          <div
+                            className={`grid transition-all duration-200 ease-out overflow-hidden ${
+                              isNestedOpen
+                                ? "grid-rows-[1fr] opacity-100 mt-1 mb-1.5"
+                                : "grid-rows-[0fr] opacity-0"
+                            }`}
+                          >
+                            <div className="min-h-0 pl-3.5 ml-2.5 border-l-2 border-[#005bb5]/20 flex flex-col gap-1 bg-slate-50/50 py-1.5 px-1 rounded-r-lg">
+                              {nestedItems.map((nested, nIdx) => {
+                                const nestedHref = resolveHref(nested);
+                                const isNestedActive = currentPath === nestedHref;
+                                const isNestedExternal = nestedHref.startsWith("http");
+                                const nestedLabel = nested.label || nested.lable;
 
-                              return isNestedExternal ? (
-                                <a
-                                  key={nested.id || nIdx}
-                                  href={nestedHref}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  onClick={onItemClick}
-                                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11.5px] sm:text-xs font-medium transition-all text-gray-500 hover:text-[#005bb5] hover:bg-slate-50"
-                                >
-                                  <span className="w-1 h-1 rounded-full bg-gray-300 shrink-0" />
-                                  <span className="truncate">{nestedLabel}</span>
-                                </a>
-                              ) : (
-                                <Link
-                                  key={nested.id || nIdx}
-                                  to={nestedHref}
-                                  onClick={onItemClick}
-                                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11.5px] sm:text-xs font-medium transition-all ${
-                                    isNestedActive
-                                      ? "bg-slate-100 text-[#005bb5] font-semibold"
-                                      : "text-gray-500 hover:text-[#005bb5] hover:bg-slate-50"
-                                  }`}
-                                >
-                                  <span
-                                    className={`w-1 h-1 rounded-full shrink-0 ${
-                                      isNestedActive ? "bg-[#ff7f00]" : "bg-gray-300"
+                                return isNestedExternal ? (
+                                  <a
+                                    key={nested.id || nIdx}
+                                    href={nestedHref}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={onItemClick}
+                                    className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all text-gray-600 hover:text-[#005bb5] hover:bg-white shadow-xs"
+                                  >
+                                    <span className="w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0" />
+                                    <span className="truncate">{nestedLabel}</span>
+                                  </a>
+                                ) : (
+                                  <Link
+                                    key={nested.id || nIdx}
+                                    to={nestedHref}
+                                    onClick={onItemClick}
+                                    className={`flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all ${
+                                      isNestedActive
+                                        ? "bg-[#005bb5] text-white font-semibold shadow-xs"
+                                        : "text-gray-600 hover:text-[#005bb5] hover:bg-white"
                                     }`}
-                                  />
-                                  <span className="truncate">{nestedLabel}</span>
-                                </Link>
-                              );
-                            })}
+                                  >
+                                    <span
+                                      className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                                        isNestedActive ? "bg-[#ff7f00]" : "bg-gray-300"
+                                      }`}
+                                    />
+                                    <span className="truncate">{nestedLabel}</span>
+                                  </Link>
+                                );
+                              })}
+                            </div>
                           </div>
                         )}
                       </div>
