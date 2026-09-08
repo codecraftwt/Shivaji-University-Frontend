@@ -145,9 +145,9 @@ export default function FloatingSocials({ socialLinks = [] }) {
                 const Icon = socialIcons[platformKey];
                 const bgClass = brandBgColors[platformKey] || "bg-[#005bb5] shadow-[#005bb5]/40";
 
-                // Radial Coordinates along upward-left arc with ample radius to ensure visible gaps
+                // Radial Coordinates along upward-left arc with comfortable radius
                 const count = validLinks.length;
-                const radius = 92; // Distance from center ball in px
+                const radius = 98; // Distance from center ball in px
                 const startAngle = 88; // Almost straight UP
                 const endAngle = 182; // Straight LEFT
                 const angleDeg = count > 1 ? startAngle + ((endAngle - startAngle) / (count - 1)) * i : 135;
@@ -161,7 +161,7 @@ export default function FloatingSocials({ socialLinks = [] }) {
                     href={s.href}
                     target="_blank"
                     rel="noreferrer"
-                    initial={{ opacity: 0, x: 0, y: 0, scale: 0.1 }}
+                    initial={{ opacity: 0, x: 0, y: 0, scale: 0.2 }}
                     animate={{ 
                       opacity: 1, 
                       x: targetX, 
@@ -179,18 +179,18 @@ export default function FloatingSocials({ socialLinks = [] }) {
                       opacity: 0, 
                       x: 0, 
                       y: 0, 
-                      scale: 0.1,
+                      scale: 0.2,
                       transition: {
                         duration: 0.15,
                         delay: (count - 1 - i) * 0.02,
                       }
                     }}
                     onClick={() => setIsMobileOpen(false)}
-                    className={`absolute w-8.5 h-8.5 rounded-full text-white ${bgClass} shadow-[0_6px_18px_rgba(0,0,0,0.25)] flex items-center justify-center border border-white/90 active:scale-90 transition-transform cursor-pointer`}
+                    className={`absolute w-10 h-10 rounded-full text-white ${bgClass} shadow-[0_6px_18px_rgba(0,0,0,0.28)] flex items-center justify-center border border-white/90 active:scale-90 transition-transform cursor-pointer`}
                     aria-label={s.platform}
                     title={s.platform}
                   >
-                    <span className="scale-[0.82] flex items-center justify-center">{Icon}</span>
+                    <span className="flex items-center justify-center text-white">{Icon}</span>
                   </motion.a>
                 );
               })}
