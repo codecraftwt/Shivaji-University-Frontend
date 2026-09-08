@@ -6,10 +6,13 @@ export function getStrapiUrl(path = "") {
   return `${STRAPI_URL}${path}`;
 }
 
+/*
 const apiMemoryCache = new Map();
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes cache
+*/
 
 export async function fetchApi(path) {
+  /* Caching temporarily disabled for testing
   const cacheKey = path;
   const now = Date.now();
 
@@ -34,6 +37,7 @@ export async function fetchApi(path) {
       }
     } catch (_) { }
   }
+  */
 
   const url = getStrapiUrl(`/api${path}`);
   const controller = new AbortController();
@@ -46,7 +50,7 @@ export async function fetchApi(path) {
     if (!res.ok) throw new Error(`Strapi ${res.status}`);
     const data = await res.json();
 
-    // Cache successful response
+    /* Cache storage disabled for testing
     apiMemoryCache.set(cacheKey, { timestamp: now, data });
     if (typeof window !== "undefined" && window.sessionStorage) {
       try {
@@ -56,14 +60,16 @@ export async function fetchApi(path) {
         );
       } catch (_) { }
     }
+    */
 
     return data;
   } catch (error) {
     clearTimeout(timeoutId);
-    // Return stale cache if available
+    /*
     if (apiMemoryCache.has(cacheKey)) {
       return apiMemoryCache.get(cacheKey).data;
     }
+    */
     throw error;
   }
 }
