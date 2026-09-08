@@ -24,7 +24,7 @@ export async function fetchApi(path) {
   // 2. Check browser sessionStorage
   if (typeof window !== "undefined" && window.sessionStorage) {
     try {
-      const stored = window.sessionStorage.getItem(`strapi_v3_${cacheKey}`);
+      const stored = window.sessionStorage.getItem(`strapi_v4_${cacheKey}`);
       if (stored) {
         const { timestamp, data } = JSON.parse(stored);
         if (now - timestamp < CACHE_TTL_MS) {
@@ -51,7 +51,7 @@ export async function fetchApi(path) {
     if (typeof window !== "undefined" && window.sessionStorage) {
       try {
         window.sessionStorage.setItem(
-          `strapi_v3_${cacheKey}`,
+          `strapi_v4_${cacheKey}`,
           JSON.stringify({ timestamp: now, data })
         );
       } catch (_) { }
@@ -122,38 +122,92 @@ export async function getPage(slug, parentSlug) {
     "populate[sections][on][sections.contact-information][populate][info]=true",
   ].join("&");
 
+  const toTitleCase = (str, sep = "-") =>
+    str ? str.split(/[-_/]/).map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(sep) : null;
+
   // Build targeted slug candidates to fetch only what is needed
-  const slugCandidates = [
+  const slugCandidates = Array.from(new Set([
     slug,
     `/${slug}`,
     slug?.toLowerCase(),
     slug?.toUpperCase(),
-    slug ? slug.charAt(0).toUpperCase() + slug.slice(1) : null,
-    slug ? slug.replace(/_/g, '-') : null,
-    slug ? slug.replace(/-/g, '_') : null,
+    toTitleCase(slug, "-"),
+    toTitleCase(slug, "_"),
+    toTitleCase(slug, " "),
+    slug ? slug.replace(/_/g, "-") : null,
+    slug ? slug.replace(/-/g, "_") : null,
     parentSlug ? `${parentSlug}/${slug}` : null,
     parentSlug ? `/${parentSlug}/${slug}` : null,
-    slug?.includes("reach") ? "About-Kolhapur" : null,
-    slug?.includes("reach") ? "/about-suk/about-kolhapur" : null,
-  ].filter(Boolean);
+    parentSlug && slug ? `${toTitleCase(parentSlug, "-")}/${toTitleCase(slug, "-")}` : null,
+    (slug?.includes("reach") || slug?.includes("kolhapur")) ? "About-Kolhapur" : null,
+    (slug?.includes("reach") || slug?.includes("kolhapur")) ? "about-kolhapur" : null,
+    (slug?.includes("reach") || slug?.includes("kolhapur")) ? "/about-suk/about-kolhapur" : null,
+    (slug?.includes("reach") || slug?.includes("kolhapur")) ? "about-suk/about-kolhapur" : null,
+    (slug?.includes("university") || slug?.includes("about-suk")) ? "about-suk" : null,
+    (slug?.includes("university") || slug?.includes("about-suk")) ? "/about-suk" : null,
+    (slug?.includes("map")) ? "university-map" : null,
+    (slug?.includes("contact")) ? "contact" : null,
+  ].filter(Boolean)));
 
   const filterParams = slugCandidates
     .map((s, i) => `filters[slug][$in][${i}]=${encodeURIComponent(s)}`)
     .join("&");
 
-  // First attempt fast targeted fetch
+  // First attempt targeted fetch
   let data = await fetchApi(`/pages?${filterParams}&${onQueries}`);
   let pages = data?.data || [];
-
-  // If targeted fetch did not return any page, fallback to full fetch
-  if (pages.length === 0) {
-    data = await fetchApi(`/pages?${onQueries}`);
-    pages = data?.data || [];
-  }
 
   const normalize = (str) => str ? str.toLowerCase().replace(/_/g, '-') : '';
   const nSlug = normalize(slug);
   const nParentSlug = normalize(parentSlug);
+
+  // Helper to check if page has meaningful sections/content
+  const isRichPage = (p) => (p?.sections && p.sections.length > 1) || (p?.content && p.content.length > 50);
+
+  // Check if we already found the desired page from targeted fetch
+  let foundPage = null;
+
+  if (nSlug.includes("reach")) {
+    foundPage = pages.find(
+      (p) =>
+        p.documentId === "gsrdx141an1rqsi0a1l9un57" ||
+        p.sections?.some((s) => s.__component === "sections.reaching-kolhapur-city")
+    );
+  } else if (nSlug.includes("kolhapur")) {
+    foundPage = pages.find(
+      (p) =>
+        p.documentId === "gsrdx141an1rqsi0a1l9un57" ||
+        p.slug === "About-Kolhapur" ||
+        isRichPage(p)
+    );
+  } else if (nSlug.includes("map") || nSlug.includes("google-map")) {
+    foundPage = pages.find(
+      (p) =>
+        p.slug === "university-map" ||
+        p.documentId === "a1ffx89iq6dmxa7xgrmu3hb6" ||
+        normalize(p.title).includes("map")
+    );
+  } else if (nSlug === "about-suk" || nSlug === "about-university") {
+    foundPage = pages.find(
+      (p) =>
+        p.slug === "about-suk" ||
+        p.documentId === "d9fqien3ktfmi9drt0vhptsu" ||
+        normalize(p.title).includes("about university")
+    );
+  } else if (nSlug === "contact" || nSlug === "contact-us" || nSlug.includes("contact")) {
+    foundPage = pages.find(
+      (p) =>
+        p.slug === "contact" ||
+        p.documentId === "o819vnaik6s6l9g7ne2zzvr2" ||
+        normalize(p.title).includes("contact")
+    );
+  }
+
+  // If not found or target was too sparse, fallback to fetching all pages
+  if (!foundPage && (pages.length === 0 || !pages.some(isRichPage))) {
+    data = await fetchApi(`/pages?${onQueries}`);
+    pages = data?.data || [];
+  }
 
   // 1. First priority: Special page aliases with guaranteed populated sections
   if (nSlug === "how-to-reach-suk" || nSlug === "how-to-reach" || nSlug.includes("reach")) {
@@ -180,7 +234,7 @@ export async function getPage(slug, parentSlug) {
       (p) =>
         p.documentId === "gsrdx141an1rqsi0a1l9un57" ||
         p.slug === "About-Kolhapur" ||
-        (p.sections && p.sections.length > 1)
+        isRichPage(p)
     );
     if (kolhapurPage) return kolhapurPage;
   }
@@ -205,7 +259,7 @@ export async function getPage(slug, parentSlug) {
     if (contactPage) return contactPage;
   }
 
-  // 2. Second priority: Exact slug match (e.g. 'About-Kolhapur' when slug is 'about-kolhapur')
+  // 2. Second priority: Exact slug match (preferring ones with sections/content)
   const exactSlugCandidates = pages.filter((p) => {
     const pSlug = normalize(p.slug);
     if (nSlug === "home" && (pSlug === "/" || pSlug === "")) return true;
