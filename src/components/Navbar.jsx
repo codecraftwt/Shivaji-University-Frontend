@@ -1,8 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { resolveHref } from "../lib/strapi";
-
-const STRAPI_URL = import.meta.env.VITE_STRAPI_URL || "http://localhost:1337";
+import { resolveHref, getMainNavbar, getStrapiUrl } from "../lib/strapi";
 
 export default function Navbar({ initialMenu }) {
   const { pathname } = useLocation();
@@ -23,15 +21,11 @@ export default function Navbar({ initialMenu }) {
 
     async function fetchNavbar() {
       try {
-        const menuRes = await fetch(
-          `${STRAPI_URL}/api/main-navbar?populate[menu_items][populate][dropdown_items][populate][sub_items]=true`
-        );
-        if (menuRes.ok) {
-          const menuData = await menuRes.json();
-          if (menuData?.data) {
-            setMenuItems(menuData.data.menu_items || []);
-            setBaseMenuItems(menuData.data.menu_items || []);
-          }
+        const menuData = await getMainNavbar();
+        if (menuData) {
+          const items = menuData.menu_items || [];
+          setMenuItems(items);
+          setBaseMenuItems(items);
         }
       } catch (error) {
         console.error("Failed to fetch navbar:", error);
@@ -51,7 +45,9 @@ export default function Navbar({ initialMenu }) {
       try {
         if (deptSlug) {
           const res = await fetch(
-            `${STRAPI_URL}/api/departments?filters[slug][$eq]=${deptSlug}&populate[menu_items][populate][dropdown_items][populate][sub_items]=true`
+            getStrapiUrl(
+              `/api/departments?filters[slug][$eq]=${deptSlug}&populate[menu_items][populate][dropdown_items][populate][sub_items]=true`
+            )
           );
           if (res.ok) {
             const result = await res.json();
@@ -62,7 +58,9 @@ export default function Navbar({ initialMenu }) {
           }
         } else if (diplomaSlug) {
           const res = await fetch(
-            `${STRAPI_URL}/api/diplomas?filters[slug][$eq]=${diplomaSlug}&populate[menu_items][populate][dropdown_items][populate][sub_items]=true`
+            getStrapiUrl(
+              `/api/diplomas?filters[slug][$eq]=${diplomaSlug}&populate[menu_items][populate][dropdown_items][populate][sub_items]=true`
+            )
           );
           if (res.ok) {
             const result = await res.json();
